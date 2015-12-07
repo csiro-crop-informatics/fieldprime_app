@@ -1,0 +1,34 @@
+[
+    {
+        "merged": "/home/kir145/proj/FieldPrime/app/build/intermediates/res/merged/debug/drawable-mdpi-v4/l_arrow.png",
+        "source": "/home/kir145/proj/FieldPrime/app/src/main/res/drawable-mdpi/l_arrow.png"
+    },
+    {
+        "merged": "/home/kir145/proj/FieldPrime/app/build/intermediates/res/merged/debug/drawable-mdpi-v4/seek_thumb_normal.png",
+        "source": "/home/kir145/proj/FieldPrime/app/src/main/res/drawable-mdpi/seek_thumb_normal.png"
+    },
+    {
+        "merged": "/home/kir145/proj/FieldPrime/app/build/intermediates/res/merged/debug/drawable-mdpi-v4/ic_print_black_24dp.png",
+        "source": "/home/kir145/proj/FieldPrime/app/src/main/res/drawable-mdpi/ic_print_black_24dp.png"
+    },
+    {
+        "merged": "/home/kir145/proj/FieldPrime/app/build/intermediates/res/merged/debug/drawable-mdpi-v4/r_arrow.png",
+        "source": "/home/kir145/proj/FieldPrime/app/src/main/res/drawable-mdpi/r_arrow.png"
+    },
+    {
+        "merged": "/home/kir145/proj/FieldPrime/app/build/intermediates/res/merged/debug/drawable-mdpi-v4/ic_action_search.png",
+        "source": "/home/kir145/proj/FieldPrime/app/src/main/res/drawable-mdpi/ic_action_search.png"
+    },
+    {
+        "merged": "/home/kir145/proj/FieldPrime/app/build/intermediates/res/merged/debug/drawable-mdpi-v4/seek_thumb_pressed.png",
+        "source": "/home/kir145/proj/FieldPrime/app/src/main/res/drawable-mdpi/seek_thumb_pressed.png"
+    },
+    {
+        "merged": "/home/kir145/proj/FieldPrime/app/build/intermediates/res/merged/debug/drawable-mdpi-v4/ic_action_help.png",
+        "source": "/home/kir145/proj/FieldPrime/app/src/main/res/drawable-mdpi/ic_action_help.png"
+    },
+    {
+        "merged": "/home/kir145/proj/FieldPrime/app/build/intermediates/res/merged/debug/drawable-mdpi-v4/ic_launcher.png",
+        "source": "/home/kir145/proj/FieldPrime/app/src/main/res/drawable-mdpi/ic_launcher.png"
+    }
+]

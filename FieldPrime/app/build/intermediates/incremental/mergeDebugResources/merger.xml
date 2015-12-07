@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merger version="3"><dataSet config="21.0.3$Generated" generated="true"><source path="/home/kir145/proj/FieldPrime/app/build/intermediates/exploded-aar/com.android.support/support-v4/21.0.3/res"/></dataSet><dataSet config="main$Generated" generated="true"><source path="/home/kir145/proj/FieldPrime/app/src/main/res"/><source path="/home/kir145/proj/FieldPrime/app/build/generated/res/rs/debug"/><source path="/home/kir145/proj/FieldPrime/app/build/generated/res/resValues/debug"/></dataSet><dataSet config="debug$Generated" generated="true"><source path="/home/kir145/proj/FieldPrime/app/src/debug/res"/></dataSet><dataSet config="21.0.3" generated-set="21.0.3$Generated"><source path="/home/kir145/proj/FieldPrime/app/build/intermediates/exploded-aar/com.android.support/support-v4/21.0.3/res"/></dataSet><dataSet config="main" generated-set="main$Generated"><source path="/home/kir145/proj/FieldPrime/app/src/main/res"><file path="/home/kir145/proj/FieldPrime/app/src/main/res/values-v11/styles.xml" qualifiers="v11"><style name="AppBaseTheme" parent="android:Theme.Holo.Light">
+        <!-- API 11 theme customizations can go here. -->
+    </style></file><file name="seek_thumb_pressed" path="/home/kir145/proj/FieldPrime/app/src/main/res/drawable-hdpi/seek_thumb_pressed.png" qualifiers="hdpi-v4" type="drawable"/><file name="ic_action_help" path="/home/kir145/proj/FieldPrime/app/src/main/res/drawable-hdpi/ic_action_help.png" qualifiers="hdpi-v4" type="drawable"/><file name="l_arrow" path="/home/kir145/proj/FieldPrime/app/src/main/res/drawable-hdpi/l_arrow.png" qualifiers="hdpi-v4" type="drawable"/><file name="ic_action_search" path="/home/kir145/proj/FieldPrime/app/src/main/res/drawable-hdpi/ic_action_search.png" qualifiers="hdpi-v4" type="drawable"/><file name="ic_launcher" path="/home/kir145/proj/FieldPrime/app/src/main/res/drawable-hdpi/ic_launcher.png" qualifiers="hdpi-v4" type="drawable"/><file name="r_arrow" path="/home/kir145/proj/FieldPrime/app/src/main/res/drawable-hdpi/r_arrow.png" qualifiers="hdpi-v4" type="drawable"/><file name="ic_print_black_24dp" path="/home/kir145/proj/FieldPrime/app/src/main/res/drawable-hdpi/ic_print_black_24dp.png" qualifiers="hdpi-v4" type="drawable"/><file name="seek_thumb_normal" path="/home/kir145/proj/FieldPrime/app/src/main/res/drawable-hdpi/seek_thumb_normal.png" qualifiers="hdpi-v4" type="drawable"/><file name="l_arrow" path="/home/kir145/proj/FieldPrime/app/src/main/res/drawable-ldpi/l_arrow.png" qualifiers="ldpi-v4" type="drawable"/><file name="ic_action_search" path="/home/kir145/proj/FieldPrime/app/src/main/res/drawable-ldpi/ic_action_search.png" qualifiers="ldpi-v4" type="drawable"/><file name="ic_launcher" path="/home/kir145/proj/FieldPrime/app/src/main/res/drawable-ldpi/ic_launcher.png" qualifiers="ldpi-v4" type="drawable"/><file name="r_arrow" path="/home/kir145/proj/FieldPrime/app/src/main/res/drawable-ldpi/r_arrow.png" qualifiers="ldpi-v4" type="drawable"/><file name="seek_thumb_pressed" path="/home/kir145/proj/FieldPrime/app/src/main/res/drawable-mdpi/seek_thumb_pressed.png" qualifiers="mdpi-v4" type="drawable"/><file name="ic_action_help" path="/home/kir145/proj/FieldPrime/app/src/main/res/drawable-mdpi/ic_action_help.png" qualifiers="mdpi-v4" type="drawable"/><file name="l_arrow" path="/home/kir145/proj/FieldPrime/app/src/main/res/drawable-mdpi/l_arrow.png" qualifiers="mdpi-v4" type="drawable"/><file name="ic_action_search" path="/home/kir145/proj/FieldPrime/app/src/main/res/drawable-mdpi/ic_action_search.png" qualifiers="mdpi-v4" type="drawable"/><file name="ic_launcher" path="/home/kir145/proj/FieldPrime/app/src/main/res/drawable-mdpi/ic_launcher.png" qualifiers="mdpi-v4" type="drawable"/><file name="r_arrow" path="/home/kir145/proj/FieldPrime/app/src/main/res/drawable-mdpi/r_arrow.png" qualifiers="mdpi-v4" type="drawable"/><file name="ic_print_black_24dp" path="/home/kir145/proj/FieldPrime/app/src/main/res/drawable-mdpi/ic_print_black_24dp.png" qualifiers="mdpi-v4" type="drawable"/><file name="seek_thumb_normal" path="/home/kir145/proj/FieldPrime/app/src/main/res/drawable-mdpi/seek_thumb_normal.png" qualifiers="mdpi-v4" type="drawable"/><file name="seek_thumb_pressed" path="/home/kir145/proj/FieldPrime/app/src/main/res/drawable-xhdpi/seek_thumb_pressed.png" qualifiers="xhdpi-v4" type="drawable"/><file name="ic_action_help" path="/home/kir145/proj/FieldPrime/app/src/main/res/drawable-xhdpi/ic_action_help.png" qualifiers="xhdpi-v4" type="drawable"/><file name="l_arrow" path="/home/kir145/proj/FieldPrime/app/src/main/res/drawable-xhdpi/l_arrow.png" qualifiers="xhdpi-v4" type="drawable"/><file name="ic_action_search" path="/home/kir145/proj/FieldPrime/app/src/main/res/drawable-xhdpi/ic_action_search.png" qualifiers="xhdpi-v4" type="drawable"/><file name="ic_launcher" path="/home/kir145/proj/FieldPrime/app/src/main/res/drawable-xhdpi/ic_launcher.png" qualifiers="xhdpi-v4" type="drawable"/><file name="r_arrow" path="/home/kir145/proj/FieldPrime/app/src/main/res/drawable-xhdpi/r_arrow.png" qualifiers="xhdpi-v4" type="drawable"/><file name="ic_print_black_24dp" path="/home/kir145/proj/FieldPrime/app/src/main/res/drawable-xhdpi/ic_print_black_24dp.png" qualifiers="xhdpi-v4" type="drawable"/><file name="seek_thumb_normal" path="/home/kir145/proj/FieldPrime/app/src/main/res/drawable-xhdpi/seek_thumb_normal.png" qualifiers="xhdpi-v4" type="drawable"/><file name="act_scoring" path="/home/kir145/proj/FieldPrime/app/src/main/res/menu/act_scoring.xml" qualifiers="" type="menu"/><file name="activity_main" path="/home/kir145/proj/FieldPrime/app/src/main/res/menu/activity_main.xml" qualifiers="" type="menu"/><file path="/home/kir145/proj/FieldPrime/app/src/main/res/values-v14/styles.xml" qualifiers="v14"><style name="AppBaseTheme" parent="android:Theme.Holo.Light.DarkActionBar">
+        <!-- API 14 theme customizations can go here. -->
+    </style></file><file name="button_bar" path="/home/kir145/proj/FieldPrime/app/src/main/res/layout/button_bar.xml" qualifiers="" type="layout"/><file name="int_keyboard" path="/home/kir145/proj/FieldPrime/app/src/main/res/layout/int_keyboard.xml" qualifiers="" type="layout"/><file name="create_instances_dialog" path="/home/kir145/proj/FieldPrime/app/src/main/res/layout/create_instances_dialog.xml" qualifiers="" type="layout"/><file name="activity_main" path="/home/kir145/proj/FieldPrime/app/src/main/res/layout/activity_main.xml" qualifiers="" type="layout"/><file name="front_list_item" path="/home/kir145/proj/FieldPrime/app/src/main/res/layout/front_list_item.xml" qualifiers="" type="layout"/><file name="score_trait_selector" path="/home/kir145/proj/FieldPrime/app/src/main/res/layout/score_trait_selector.xml" qualifiers="" type="layout"/><file name="bluetooth_main" path="/home/kir145/proj/FieldPrime/app/src/main/res/layout/bluetooth_main.xml" qualifiers="" type="layout"/><file name="file_browse" path="/home/kir145/proj/FieldPrime/app/src/main/res/layout/file_browse.xml" qualifiers="" type="layout"/><file name="row" path="/home/kir145/proj/FieldPrime/app/src/main/res/layout/row.xml" qualifiers="" type="layout"/><file name="print_setup" path="/home/kir145/proj/FieldPrime/app/src/main/res/layout/print_setup.xml" qualifiers="" type="layout"/><file name="score_integer" path="/home/kir145/proj/FieldPrime/app/src/main/res/layout/score_integer.xml" qualifiers="" type="layout"/><file name="search" path="/home/kir145/proj/FieldPrime/app/src/main/res/layout/search.xml" qualifiers="" type="layout"/><file name="scoring" path="/home/kir145/proj/FieldPrime/app/src/main/res/layout/scoring.xml" qualifiers="" type="layout"/><file name="signin" path="/home/kir145/proj/FieldPrime/app/src/main/res/layout/signin.xml" qualifiers="" type="layout"/><file name="traits" path="/home/kir145/proj/FieldPrime/app/src/main/res/layout/traits.xml" qualifiers="" type="layout"/><file name="preferences" path="/home/kir145/proj/FieldPrime/app/src/main/res/xml/preferences.xml" qualifiers="" type="xml"/><file path="/home/kir145/proj/FieldPrime/app/src/main/res/values-h700dp/myStyles.xml" qualifiers="h700dp-v13"><style name="scoreHLayoutBiggerItem" parent="whiteOnBlack">
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:textSize">40sp</item>
+    </style><style name="scoreVLayoutItem" parent="whiteOnBlack">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">60dp</item>
+        <item name="android:background">@color/silver</item>
+    </style><style name="buttonBar" parent="@android:style/ButtonBar">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">100dp</item>
+    </style><style name="scoreVLayoutBiggerItem" parent="whiteOnBlack">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">100dp</item>
+        <item name="android:background">@color/silver</item>
+    </style><style name="scoreHLayoutItem" parent="whiteOnBlack">
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:textSize">40sp</item>
+    </style></file><file path="/home/kir145/proj/FieldPrime/app/src/main/res/values/ids.xml" qualifiers=""><item name="openTrial" type="id"/><item name="prev" type="id"/><item name="nodeNotes" type="id"/><item name="importTrialXML" type="id"/><item name="importTrialCSV" type="id"/><item name="addNode" type="id"/><item name="importTrialServer" type="id"/><item name="next" type="id"/></file><file path="/home/kir145/proj/FieldPrime/app/src/main/res/values/myStyles.xml" qualifiers=""><style name="scoreHLayoutBiggerItem" parent="whiteOnBlack">
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:textSize">30sp</item>
+    </style><style name="scoreVLayoutItem" parent="whiteOnBlack">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">30dp</item>
+        <!--  <item name="android:background">@color/silver</item> -->
+    </style><style name="buttonBar" parent="@android:style/ButtonBar">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">50dp</item>
+    </style><style name="scoreVLayoutBiggerItem" parent="whiteOnBlack">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">50dp</item>
+        <!-- <item name="android:background">@color/silver</item> -->
+    </style><style name="scoreHLayoutItem" parent="whiteOnBlack">
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:textSize">20sp</item>
+    </style><style name="blackOnWhite">
+        <item name="android:background">#FFFFFF</item>
+        <item name="android:textColor">#000000</item>
+    </style><style name="whiteOnBlack">
+        <item name="android:background">#000000</item>
+        <item name="android:textColor">#FFFFFF</item>
+    </style><style name="horizontalLine">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">2dip</item>
+        <item name="android:background">#FFFFFF</item>
+    </style></file><file path="/home/kir145/proj/FieldPrime/app/src/main/res/values/styles.xml" qualifiers=""><style name="AppBaseTheme" parent="android:Theme.Light">
+        <!--
+            Theme customizations available in newer API levels can go in
+            res/values-vXX/styles.xml, while customizations related to
+            backward-compatibility can go here.
+
+        -->
+    </style><style name="AppTheme" parent="AppBaseTheme">
+        <!-- All customizations that are NOT specific to a particular API-level can go here. -->
+    </style></file><file path="/home/kir145/proj/FieldPrime/app/src/main/res/values/strings.xml" qualifiers=""><string name="selectTraits">Select Traits to Score</string><string name="pref_notify_selections">notifySelections</string><string name="pref_notify_beeps">notifyBeeps</string><string name="pref_walk_reverse">walkRevers</string><string name="server_user_title">Project</string><string name="server_address_title">Server Web Address</string><string name="pref_autoprogress_between_nodes">autoProgressBetween</string><string name="pref_key_int_input_method">integerScoreInputFormat</string><string name="pref_notify_column">notifyColumn</string><string name="def_server_address">https://compbio-pi.csiro.au/fprime</string><string name="pref_server_address">serverAddress</string><string name="app_name">CSIRO FieldPrime</string><string name="pref_autoprogress_within_nodes">autoProgressWithin</string><string name="pref_notify_row">notifyRow</string><string name="pref_server_user">serverUser</string><string name="pref_autoprogress_skip_already_scored">skipAlreadyScored</string><string name="pref_key_walk_order">walkOrder</string><string name="pref_notify_skip">notifySkip</string><string name="pref_server_password">serverPassword</string><string name="pref_interleave_tis">interleaveTIs</string><string name="menu_settings">Settings</string><string name="max_gps_summary">        If set to a non-zero value, a warning message will be issued if a score is
+        entered at a location further away than this value (provided the trial unit
+        has a known GPS location).</string><string name="pref_gps_max_delta">whatsThis</string></file><file path="/home/kir145/proj/FieldPrime/app/src/main/res/values/appcolors.xml" qualifiers=""><color name="lime">#00FF00</color><color name="silver">#C0C0C0</color><color name="blue">#0000FF</color><color name="green">#008000</color><color name="navy">#000080</color><color name="red">#FF0000</color><color name="aqua">#00FFFF</color><color name="gray">#808080</color><color name="purple">#800080</color><color name="yellow">#FFFF00</color><color name="fuchsia">#FF00FF</color><color name="olive">#808000</color><color name="maroon">#800000</color><color name="white">#FFFFFF</color><color name="black">#000000</color><color name="teal">#008080</color></file><file path="/home/kir145/proj/FieldPrime/app/src/main/res/values/arrays.xml" qualifiers=""><string-array name="integerScoreInputFormatValues">
+        <item>1</item>
+        <item>2</item>
+    </string-array><string-array name="empty_array"/><string-array name="notificationValues">
+        <item>rv</item>
+        <item>rb</item>
+        <item>cv</item>
+        <item>cb</item>
+        <item>sv</item>
+        <item>sb</item>
+    </string-array><string-array name="notificationNames">
+        <item>Changing Rows - Voice</item>
+        <item>Changing Rows - Beep</item>
+        <item>Changing Columns - Voice</item>
+        <item>Changing Columnss - Beep</item>
+        <item>Skipping Already Scored - Voice</item>
+        <item>Skipping Already Scored - Beep</item>
+    </string-array><string-array name="walkOrderValues">
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+    </string-array><string-array name="integerScoreInputFormats">
+        <item>Range Buttons</item>
+        <item>Numeric Keypad</item>
+    </string-array><string-array name="walkOrderNames">
+        <item>Columns Serpentine</item>
+        <item>Rows Serpentine</item>
+        <item>Columns</item>
+        <item>Rows</item>
+    </string-array></file></source><source path="/home/kir145/proj/FieldPrime/app/build/generated/res/rs/debug"/><source path="/home/kir145/proj/FieldPrime/app/build/generated/res/resValues/debug"/></dataSet><dataSet config="debug" generated-set="debug$Generated"><source path="/home/kir145/proj/FieldPrime/app/src/debug/res"/></dataSet><mergedItems/></merger>

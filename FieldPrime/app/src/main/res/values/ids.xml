@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="prev" type="id"/>
+    <item name="next" type="id"/>
+    <item name="openTrial" type="id"/>
+    <item name="importTrialCSV" type="id"/>
+    <item name="importTrialXML" type="id"/>
+    <item name="importTrialServer" type="id"/>
+    <item name="nodeNotes" type="id"/>
+    <item name="addNode" type="id"/>
+</resources>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">CSIRO FieldPrime</string>
+    <string name="menu_settings">Settings</string>
+    <string name="pref_key_walk_order">walkOrder</string>
+    <string name="pref_walk_reverse">walkRevers</string>
+    <string name="pref_key_int_input_method">integerScoreInputFormat</string>
+    <string name="pref_interleave_tis">interleaveTIs</string>
+    <string name="pref_autoprogress_within_nodes">autoProgressWithin</string>
+    <string name="pref_autoprogress_between_nodes">autoProgressBetween</string>
+    <string name="pref_autoprogress_skip_already_scored">skipAlreadyScored</string>
+    <string name="pref_notify_row">notifyRow</string>
+    <string name="pref_notify_column">notifyColumn</string>
+    <string name="pref_notify_skip">notifySkip</string>
+    <string name="pref_notify_beeps">notifyBeeps</string>
+    <string name="pref_notify_selections">notifySelections</string>
+    <string name="pref_server_address">serverAddress</string>
+    <string name="def_server_address">https://compbio-pi.csiro.au/fprime</string>
+    <string name="server_address_title">Server Web Address</string>
+    <string name="pref_server_user">serverUser</string>
+    <string name="pref_server_password">serverPassword</string>
+    <string name="server_user_title">Project</string>
+    <string name="selectTraits">Select Traits to Score</string>
+    
+    <string name="pref_gps_max_delta">whatsThis</string>
+    <string name="max_gps_summary">        If set to a non-zero value, a warning message will be issued if a score is
+        entered at a location further away than this value (provided the trial unit
+        has a known GPS location).</string>
+</resources>

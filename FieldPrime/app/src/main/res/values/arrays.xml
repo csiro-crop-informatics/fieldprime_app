@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string-array name="empty_array" />
+    <string-array name="walkOrderNames">
+        <item>Columns Serpentine</item>
+        <item>Rows Serpentine</item>
+        <item>Columns</item>
+        <item>Rows</item>
+    </string-array>
+    <string-array name="walkOrderValues">
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+    </string-array>
+    <string-array name="notificationNames">
+        <item>Changing Rows - Voice</item>
+        <item>Changing Rows - Beep</item>
+        <item>Changing Columns - Voice</item>
+        <item>Changing Columnss - Beep</item>
+        <item>Skipping Already Scored - Voice</item>
+        <item>Skipping Already Scored - Beep</item>
+    </string-array>
+    <string-array name="notificationValues">
+        <item>rv</item>
+        <item>rb</item>
+        <item>cv</item>
+        <item>cb</item>
+        <item>sv</item>
+        <item>sb</item>
+    </string-array>
+    <string-array name="integerScoreInputFormats">
+        <item>Range Buttons</item>
+        <item>Numeric Keypad</item>
+    </string-array>
+    <string-array name="integerScoreInputFormatValues">
+        <item>1</item>
+        <item>2</item>
+    </string-array>
+
+</resources>

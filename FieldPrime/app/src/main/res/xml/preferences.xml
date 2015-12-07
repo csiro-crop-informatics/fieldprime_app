@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <PreferenceCategory
+        android:key="first_category"
+        android:title="Auto Progression" >
+        <CheckBoxPreference
+            android:defaultValue="true"
+            android:key="@string/pref_autoprogress_within_nodes"
+            android:summary="Auto progress WITHIN nodes"
+            android:title="Within Nodes" />
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="@string/pref_autoprogress_between_nodes"
+            android:summary="Auto progress BETWEEN nodes"
+            android:title="Between Nodes" />
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="@string/pref_autoprogress_skip_already_scored"
+            android:summary="Skip nodes that are fully scored (for current selected Score Sets)"
+            android:title="Skip Already Scored" />
+    </PreferenceCategory>
+    
+    <PreferenceCategory
+        android:key="notification_category"
+        android:title="Notifications" >
+        <!--
+        <CheckBoxPreference
+            android:defaultValue="true"
+            android:key="@string/pref_notify_row"
+            android:title="Notify when changing rows" />
+        <CheckBoxPreference
+            android:defaultValue="true"
+            android:key="@string/pref_notify_column"
+            android:title="Notify When Changing Columns" />
+        <CheckBoxPreference
+            android:defaultValue="true"
+            android:key="@string/pref_notify_skip"
+            android:title="Notify when skipping scored trial units" />
+        <CheckBoxPreference
+            android:defaultValue="true"
+            android:key="@string/pref_notify_beeps"
+            android:title="Use beeps for notification" />
+        -->
+        <MultiSelectListPreference
+            android:defaultValue="@array/empty_array"
+            android:entries="@array/notificationNames"
+            android:entryValues="@array/notificationValues"
+            android:key="@string/pref_notify_selections"
+            android:summary="Choose the notifications"
+            android:title="Choose notifications" />
+        
+    </PreferenceCategory>
+    
+    <PreferenceCategory
+        android:key="server_category"
+        android:title="Server" >
+        <EditTextPreference
+            android:defaultValue="@string/def_server_address"
+            android:dialogMessage="Enter the URL of the server"
+            android:dialogTitle="Trial Server"
+            android:key="@string/pref_server_address"
+            android:summary="Address of the Datareap server web page"
+            android:title="@string/server_address_title" />
+        <EditTextPreference
+            android:defaultValue=""
+            android:dialogMessage="Enter the FieldPrime project name"
+            android:dialogTitle="Project"
+            android:key="@string/pref_server_user"
+            android:summary="FieldPrime Project Name"
+            android:title="@string/server_user_title" />
+        <EditTextPreference
+            android:defaultValue=""
+            android:dialogMessage="If the project has a data password, enter it below\n\n
+            Data passwords may be specified for a project by an administrator on the server, 
+            If a data password has been specified then it must be provided here to either
+            download from or upload to the project"
+            android:dialogTitle="Project data password"
+            android:inputType="textPassword"
+            android:key="@string/pref_server_password"
+            android:summary="Password for server data"
+            android:title="Project Data Password" />
+    </PreferenceCategory>
+    
+    <!--  
+    <PreferenceCategory
+        android:key="walk_order_category"
+        android:title="Walk Order" >
+        <ListPreference
+            android:defaultValue="1"
+            android:entries="@array/walkOrderNames"
+            android:entryValues="@array/walkOrderValues"
+            android:key="@string/pref_key_walk_order"
+            android:summary="Choose the order you will visit the plots for scoring..."
+            android:title="Walk Order" />
+
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="@string/pref_walk_reverse"
+            android:title="Reverse direction within row/columns" />
+    </PreferenceCategory>
+    -->
+    
+<PreferenceCategory
+        android:key="misc_category"
+        android:title="Miscellaneous" >
+        <ListPreference
+            android:defaultValue="1"
+            android:entries="@array/integerScoreInputFormats"
+            android:entryValues="@array/integerScoreInputFormatValues"
+            android:key="@string/pref_key_int_input_method"
+            android:summary="Score input method for integer traits..."
+            android:title="Integer Scoring Method" />
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="@string/pref_interleave_tis"
+            android:title="Interleave samples"
+        	android:summary="Interleave multi samples when scoring" />
+        <EditTextPreference
+            android:numeric="integer"
+            android:defaultValue="6"
+            android:dialogMessage="Enter the maximum display to allow scoring without warning"
+            android:dialogTitle="Max GPS delta"
+            android:key="@string/pref_gps_max_delta"
+            android:summary="@string/max_gps_summary"
+            android:title="Maximum GPS distance error for scoring " />
+
+        </PreferenceCategory>
+
+</PreferenceScreen>

@@ -1,0 +1,24 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 21
+    buildToolsVersion "19.1.0"
+
+    defaultConfig {
+        applicationId "csiro.fieldprime"
+        minSdkVersion 16
+        targetSdkVersion 19
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-project.txt'
+        }
+    }
+}
+
+dependencies {
+    compile 'com.android.support:support-v4:21.0.3'
+    compile files('libs/ZSDK_ANDROID_API.jar')
+}

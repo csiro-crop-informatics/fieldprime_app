@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical" >
+
+    <!-- Trait spinner: ========================================================================== -->
+
+    <Spinner
+        android:id="@+id/traitList"
+        android:layout_width="match_parent"
+        android:layout_height="60dp" />
+
+    <!-- Horizontal line: ========================================================================== -->
+
+    <View
+        android:layout_width="fill_parent"
+        android:layout_height="2dip"
+        android:background="@color/black" />
+
+    <!-- Caption: ========================================================================== -->
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:orientation="horizontal" >
+
+        <TextView
+            android:id="@+id/traitsTV1"
+            android:layout_width="0dip"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="right|center_vertical"
+            android:text="Caption : "
+            android:textSize="20sp" />
+
+        <EditText
+            android:id="@+id/traitCaption"
+            android:layout_width="0dip"
+            android:layout_height="match_parent"
+            android:layout_weight="2"
+            android:hint="Short name for trait"
+            android:inputType="text"
+            android:textSize="20sp" />
+    </LinearLayout>
+
+    <!-- Description: ========================================================================== -->
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:orientation="horizontal" >
+
+        <TextView
+            android:id="@+id/traitsTV2"
+            android:layout_width="0dp "
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="right|center_vertical"
+            android:text="Description : "
+            android:textSize="20sp" />
+
+        <EditText
+            android:id="@+id/traitDescription"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="2"
+            android:hint="Description of trait"
+            android:inputType="text" />
+    </LinearLayout>
+
+    <!-- Type spinner: ========================================================================== -->
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:orientation="horizontal" >
+
+        <TextView
+            android:id="@+id/traitsTV3"
+            android:layout_width="0dip"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="right|center_vertical"
+            android:text="Type : "
+            android:textSize="20sp" />
+
+        <Spinner
+            android:id="@+id/traitTypeList"
+            android:layout_width="0dip"
+            android:layout_height="match_parent"
+            android:layout_gravity="center_horizontal"
+            android:layout_weight="2" />
+    </LinearLayout>
+
+    <!-- Horizontal line: ========================================================================== -->
+
+    <View
+        android:layout_width="fill_parent"
+        android:layout_height="2dip"
+        android:background="@color/black" />
+
+    <!-- Type Specific Frame: ========================================================================== -->
+
+    <LinearLayout
+        android:id="@+id/traitTypeSpecific"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical" >
+    </LinearLayout>
+
+    <!-- Horizontal line: ========================================================================== -->
+
+    <View
+        android:layout_width="fill_parent"
+        android:layout_height="2dip"
+        android:background="@color/black" />
+    
+    <!-- Control Buttons: ========================================================================== -->
+
+    <LinearLayout
+        android:id="@+id/traitButtonLayout"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:orientation="horizontal" >
+    </LinearLayout>
+
+</LinearLayout> <!-- Junkyard: ========================================================================== -->
+<!--
+    <TextView
+        android:id="@+id/textView1"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:gravity="bottom"
+        android:text="Trait Type: "
+        android:textSize="20sp" />
+
+    <RadioGroup
+        android:id="@+id/traitTypeSelector"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal" >
+
+        <RadioButton
+            android:id="@+id/traitTypeInteger"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Integer" />
+
+        <RadioButton
+            android:id="@+id/traitTypeDecimal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Decimal" />
+
+        <RadioButton
+            android:id="@+id/traitTypeString"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="String" />
+    </RadioGroup>
+    
+                android:background="@color/silver"
+    
+                android:layout_marginBottom="4dp"
+            android:layout_marginLeft="4dp"
+            android:layout_marginRight="4dp"
+            android:layout_marginTop="16dp"
+            
+                    <Button
+            android:id="@+id/traitEdit"
+            android:layout_width="wrap_content"
+            android:layout_height="60dp"
+            android:layout_weight="1"
+            android:onClick="onClick"
+            android:text="Edit"
+            android:textSize="30sp" />
+-->
+
