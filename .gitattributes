@@ -1,25 +1,5 @@
 * text=auto !eol
-FieldPrime/.gradle/2.8/taskArtifacts/cache.properties -text
-FieldPrime/.gradle/2.8/taskArtifacts/cache.properties.lock -text
-FieldPrime/.gradle/2.8/taskArtifacts/fileHashes.bin -text
-FieldPrime/.gradle/2.8/taskArtifacts/fileSnapshots.bin -text
-FieldPrime/.gradle/2.8/taskArtifacts/outputFileStates.bin -text
-FieldPrime/.gradle/2.8/taskArtifacts/taskArtifacts.bin -text
-FieldPrime/.idea/.name -text
-FieldPrime/.idea/compiler.xml -text
-FieldPrime/.idea/copyright/profiles_settings.xml -text
-FieldPrime/.idea/encodings.xml -text
-FieldPrime/.idea/gradle.xml -text
-FieldPrime/.idea/libraries/ZSDK_ANDROID_API.xml -text
-FieldPrime/.idea/libraries/support_annotations_21_0_3.xml -text
-FieldPrime/.idea/libraries/support_v4_21_0_3.xml -text
-FieldPrime/.idea/misc.xml -text
-FieldPrime/.idea/modules.xml -text
-FieldPrime/.idea/runConfigurations.xml -text
-FieldPrime/.idea/vcs.xml -text
-FieldPrime/.idea/workspace.xml -text
 FieldPrime/FieldPrime.iml -text
-FieldPrime/app/app.iml -text
 FieldPrime/app/build.gradle -text
 FieldPrime/app/libs/ZSDK_ANDROID_API.jar -text
 FieldPrime/app/proguard-project.txt -text
