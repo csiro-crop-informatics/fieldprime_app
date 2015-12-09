@@ -117,7 +117,7 @@ public class ActBluetooth extends VerticalList.VLActivity {
 	View getMidView() {
 		mText = super.makeTextView();
 		return mText; 
-	};
+	}
 	
     private void Scan() {
 		Toast.makeText(getBaseContext(),

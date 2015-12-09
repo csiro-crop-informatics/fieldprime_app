@@ -40,7 +40,7 @@ public class DlgFilter extends DialogFragment {
 	private Spinner mAttValue;
 		
 	// Prevent external constructor call, newInstance should be used instead.
-	private DlgFilter() {}
+//	private DlgFilter() {}
 
 	public static void newInstance() {
 		/*

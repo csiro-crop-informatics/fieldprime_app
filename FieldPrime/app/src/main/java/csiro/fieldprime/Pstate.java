@@ -220,4 +220,4 @@ public class Pstate {
 		mReverse = reverse;	
 	}
 	public boolean getReverse() { return mReverse; }
-};
+}

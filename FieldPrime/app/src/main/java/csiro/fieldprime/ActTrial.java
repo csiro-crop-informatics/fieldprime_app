@@ -858,7 +858,7 @@ public class ActTrial extends Globals.Activity
 			// Setup clickable attribute name:
 			mAttName = new TextView(mCtx);
 			Util.setColoursWhiteOnBlack(mAttName);
-			mAttName.setTextSize(g.TextSize(g.SIZE_MEDIUM));
+			mAttName.setTextSize(g.TextSize(Globals.SIZE_MEDIUM));
 			mAttName.setLayoutParams(new LinearLayout.LayoutParams(0, LayoutParams.MATCH_PARENT, 0.33f));
 
 			mPop = new PopupMenu(mCtx, mAttName);
@@ -901,7 +901,7 @@ public class ActTrial extends Globals.Activity
 			mAttVal = new TextView(mCtx);
 			mAttVal.setHorizontallyScrolling(true);
 			Util.setColoursWhiteOnBlack(mAttVal);
-			mAttVal.setTextSize(g.TextSize(g.SIZE_MEDIUM));
+			mAttVal.setTextSize(g.TextSize(Globals.SIZE_MEDIUM));
 			mAttVal.setLayoutParams(new LinearLayout.LayoutParams(0, LayoutParams.MATCH_PARENT, 0.67f));
 			addView(mAttVal);
 		}
@@ -1282,7 +1282,7 @@ if (true) {
 					}
 				});
 		mTraitSelector.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, Util
-				.dp2px(g.ScreenItemSize(g.SIZE_BIG))));
+				.dp2px(g.ScreenItemSize(Globals.SIZE_BIG))));
 		Util.setBackgroundBlack(mTraitSelector);
 		scoreVL.addView(mTraitSelector);
 		scoreVL.addView(new Hline(this));

@@ -2385,7 +2385,7 @@ public class Trial {
 		boolean navigatingAway();
 		//void processTextValue(String val);
 	}
-	public enum NodePropertySource { ATTRIBUTE, SCORE, FIXED, LITERAL };
+	public enum NodePropertySource { ATTRIBUTE, SCORE, FIXED, LITERAL }
 	static abstract class NodeProperty {
 		abstract long id();                     // id should be unique within source
 		abstract NodePropertySource source();
@@ -3897,6 +3897,8 @@ public class Trial {
 			return this.ordinal();
 		}
 		static public SortType fromValue(int val) {
+//			if (val < SORT_COLUMN_SERPENTINE.ordinal() || val > SORT_CUSTOM.ordinal())
+//				return null;
 			return values()[val];
 		}
 		public String text(Trial trial) {
@@ -3932,5 +3934,5 @@ public class Trial {
 	    public String toString() {
 	        return mText;
 	    }
-	};
+	}
 }
