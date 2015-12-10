@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="csiro.fieldprime"
-    android:versionCode="491"
-    android:versionName="FieldPrime v1.1.beta.2 - October 26 2015 " >
+    android:versionCode="497"
+    android:versionName="FieldPrime v1.1.3 - December 10 2015 " >
 
     <uses-sdk
-        android:minSdkVersion="16"
+        android:minSdkVersion="17"
         android:targetSdkVersion="19" />
 
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />

@@ -2214,6 +2214,9 @@ public class Trial {
 							return false;
 						} else
 							mNotesSuccess = true;
+					} else {
+						mNotesSuccess = true;
+						mNotesToUpload = false;
 					}
 				} else {
 					mNotesSuccess = false;
@@ -2281,9 +2284,11 @@ public class Trial {
 							(mNotesSuccess ? "success" : "FAIL - ") + mNotesError);
 				}
 				if (mTINumToUpload > 0) {
-					summary += "Score uploads :\n";
-					summary += mTINumToUpload + " scoreSet/sample" + (mTINumToUpload > 1 ? "s" : "")
-							+ " to upload:\n  success: " + mTiSuccessCount + "\n  FAIL: " + mTiFailCount;
+					summary += "ScoreSet uploads :\n";
+					summary += "" + mTiSuccessCount + "/" + mTINumToUpload + " scoreSets successfully uploaded\n";
+					if (mTiFailCount > 0) {
+						summary += "" + mTiFailCount + "/" + mTINumToUpload + " scoreSets failed to upload\n";
+					}
 					if (mTiError != null)
 						summary += " " + mTiError;
 				}
@@ -3897,8 +3902,8 @@ public class Trial {
 			return this.ordinal();
 		}
 		static public SortType fromValue(int val) {
-//			if (val < SORT_COLUMN_SERPENTINE.ordinal() || val > SORT_CUSTOM.ordinal())
-//				return null;
+			if (val < SORT_COLUMN_SERPENTINE.ordinal() || val > SORT_CUSTOM.ordinal())
+				return null;
 			return values()[val];
 		}
 		public String text(Trial trial) {

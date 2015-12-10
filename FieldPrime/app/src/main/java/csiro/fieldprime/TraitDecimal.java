@@ -60,7 +60,7 @@ public class TraitDecimal extends TraitNumeric {
 		 */
 		@Override
 		public boolean processTextValue(String txt) {
-			if (txt.matches("-?\\d+(\\.\\d+)?")) {
+			if (txt.matches("-?\\d*(\\.\\d+)?")) {
 				// perhaps should just do this parse in a try/catch
 				// That must do range check too, note range check below
 				// on default range (system limits) won't work, as the
