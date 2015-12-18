@@ -2431,7 +2431,8 @@ public class Trial {
 		 */
 		abstract Double valueNumeric(Node tu);
 
-		
+		abstract ArrayList<?> getDistinctValues();
+
 		/*
 		 * newIntLiteralInstance()
 		 * Create prop with a constant int value.
@@ -2447,6 +2448,11 @@ public class Trial {
 				@Override Object valueObject(Node tu) { return value; }
 				@Override Double valueNumeric(Node tu) {return new Double(value);}
 				@Override IDatum getCurrentIDatum() { return null; }
+				@Override ArrayList<?> getDistinctValues() {
+					ArrayList<Integer> dvals = new ArrayList<Integer>();
+					dvals.add(value);
+					return dvals;
+				}
 			};
 		}
 		
@@ -2562,6 +2568,30 @@ public class Trial {
 					default: return null;
 					}
 				}
+
+				@Override
+				ArrayList<?> getDistinctValues() {
+					switch (fieldCode) {
+					case FIELD_ROW:
+						//return String.valueOf(tu.getRow());
+						ArrayList<Integer> vals = new ArrayList<Integer>();
+						String qry = String.format(Locale.US,
+								"select distinct %s from %s where %s = %d", ND_ROW, TABLE_NODE,
+								ND_TRIAL_ID, getId());
+						Cursor ccr = null;
+						try {
+							ccr = g_db().rawQuery(qry, null);
+							if (ccr.moveToFirst())
+								do vals.add(ccr.getInt(0)); while (ccr.moveToNext());
+						} finally { if (ccr != null) ccr.close(); }
+						return vals;
+					case FIELD_COL:
+					case FIELD_BARCODE:
+					case FIELD_LOCATION:
+					default: return null;
+					}
+				}
+
 				@Override
 				IDatum getCurrentIDatum() {
 					// TODO Auto-generated method stub
@@ -3267,6 +3297,7 @@ public class Trial {
 			
 		}
 
+		@Override
 		public ArrayList<?> getDistinctValues() {
 			ArrayList<Object> vals = new ArrayList<Object>();						
 			String qry = String.format(Locale.US,
@@ -3593,6 +3624,11 @@ public class Trial {
 		Double valueNumeric(Node tu) {
 			// MFK not needed ATTOW, probably will be, but there may be a different solution then..
 			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		ArrayList<?> getDistinctValues() {
 			return null;
 		}
 

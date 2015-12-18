@@ -1088,7 +1088,7 @@ public class ActTrial extends Globals.Activity
 			// which could also provide a menu (+1 -1) for easier navigation (have this for columns also).
 			// NB, the values here are overwritten by the call to refreshNodeScreen, but we do need to create these..
 			// NB - will perhaps crash if mShowRowCol not true
-if (true) {			
+if (false) {
 			mNodePropPrompt1 = rcBar.addTextView(mTrial.getIndexName(0), 1);
 			mNodePropValue1 = rcBar.addTextView(null, 1);
 			mNodePropPrompt2 = rcBar.addTextView(mTrial.getIndexName(1), 1);
@@ -1125,6 +1125,14 @@ if (true) {
 		//v.setBackgroundResource(COLOUR_SCORED);
 	}
 
+	/*
+	 * Get the list of rows:
+	 */
+	mNodePropSpin1 = rcBar.addSpinner(mItems, null, null);
+
+	/*
+	 * Handler for row/col spinner selection:
+	 */
 	mNodePropSpin1.setOnItemSelectedListener(new OnItemSelectedListener() {
 		private boolean mMuteSelectionChangeHandler = true; // prevent unwanted initial selection change callback, maybe copied code..
 
