@@ -161,10 +161,10 @@ public class Trial {
 			trl.mIndexNames[1] = indname;
 		
 		// Set up the fixed properties:
-		trl.mFixedTups.add(NodeProperty.newFixedInstance(trl.getIndexName(0), FIELD_ROW, T_INTEGER));
-		trl.mFixedTups.add(NodeProperty.newFixedInstance(trl.getIndexName(1), FIELD_COL, T_INTEGER));
-		trl.mFixedTups.add(NodeProperty.newFixedInstance("Barcode", FIELD_BARCODE, T_STRING));
-		trl.mFixedTups.add(NodeProperty.newFixedInstance("Location", FIELD_LOCATION, T_LOCATION));
+		trl.mFixedTups.add(NodeProperty.newFixedInstance(trl, trl.getIndexName(0), FIELD_ROW, T_INTEGER));
+		trl.mFixedTups.add(NodeProperty.newFixedInstance(trl, trl.getIndexName(1), FIELD_COL, T_INTEGER));
+		trl.mFixedTups.add(NodeProperty.newFixedInstance(trl, "Barcode", FIELD_BARCODE, T_STRING));
+		trl.mFixedTups.add(NodeProperty.newFixedInstance(trl, "Location", FIELD_LOCATION, T_LOCATION));
 
 		// Get trial ready for use.
 		trl.initScoreSetList();
@@ -2527,7 +2527,7 @@ public class Trial {
 		 * newFixedInstance()
 		 * Create prop with a constant int value.
 		 */
-		static private NodeProperty newFixedInstance(final String name, final int fieldCode, final Datatype datatype) {
+		static private NodeProperty newFixedInstance(final Trial trial, final String name, final int fieldCode, final Datatype datatype) {
 			return new NodeProperty() {
 				@Override
 				String name() {
@@ -2577,7 +2577,7 @@ public class Trial {
 						ArrayList<Integer> vals = new ArrayList<Integer>();
 						String qry = String.format(Locale.US,
 								"select distinct %s from %s where %s = %d", ND_ROW, TABLE_NODE,
-								ND_TRIAL_ID, getId());
+								ND_TRIAL_ID, trial.getId());
 						Cursor ccr = null;
 						try {
 							ccr = g_db().rawQuery(qry, null);

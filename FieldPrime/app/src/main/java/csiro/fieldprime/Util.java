@@ -6,8 +6,6 @@
 package csiro.fieldprime;
 
 import java.io.BufferedWriter;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -15,16 +13,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
-
-import org.apache.http.HttpStatus;
-
-import csiro.fieldprime.R;
-import csiro.fieldprime.Util.LogMethod;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -36,11 +27,8 @@ import android.content.res.Configuration;
 import android.graphics.Color;
 import android.location.Location;
 import android.util.Log;
-import android.util.TypedValue;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
