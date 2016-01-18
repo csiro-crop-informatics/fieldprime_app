@@ -63,7 +63,7 @@ public class DlgFilter extends DialogFragment {
 		 * Set up vlist with attribute selection spinner, and then when an
 		 * attribute is selected a spinner with that attribute's values
 		 */
-		mMainView = new VerticalList(getActivity());	
+		mMainView = new VerticalList(getActivity(), false);
 		// Add attribute spinner:
 		mMainView.addText("Filter Attribute:");
 		mAttSpin = mMainView.addSpinner(trl.getAttributes(), "-- No Filter --", nodeAtt);

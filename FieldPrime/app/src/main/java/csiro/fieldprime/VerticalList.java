@@ -49,6 +49,9 @@ public class VerticalList extends ViewLine {
 	public VerticalList(Context context) {
 		this(context, null);
 	}
+	public VerticalList(Context context, boolean blackBackground) {
+		super((Globals.Activity)context, true, null, blackBackground);
+	}
 	public VerticalList(Context context, int size) {
 		super((Globals.Activity)context, true, null, size, true);
 	}

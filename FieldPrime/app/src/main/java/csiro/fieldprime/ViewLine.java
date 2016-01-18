@@ -159,6 +159,8 @@ public class ViewLine extends LinearLayout {
 				View view = super.getView(position, convertView, parent);
 				TextView tv = (TextView) view;
 				tv.setTextSize(30);
+				if (mBlackBackground)
+					Util.setColoursWhiteOnBlack(tv);
 				return view;
 			}
 			@Override

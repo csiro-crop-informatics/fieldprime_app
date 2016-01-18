@@ -96,6 +96,8 @@ public class Trial {
 	
 	/*
 	 * Create a NodeProperty instance for the following four node members:
+	 * Perhaps should be enum, but these may be deprecated at some stage..
+	 * NB - these values are used as indexes into mFixedTups.
 	 */
 	public static final int FIELD_ROW = 0;
 	public static final int FIELD_COL = 1;
@@ -797,6 +799,21 @@ public class Trial {
 			this.atName = atName;
 			this.atVal = atVal;
 		}
+	}
+
+	/**
+	 * Get one node matching row col. Null if none found.
+	 * @param row index 1 value
+	 * @param col index 2 value
+	 * @return First found node, or null if none found with specified values
+	 */
+	public Node getNodeByRowCol(int row, int col) {
+		for (int i = 0; i < mNodeList.size(); ++i) {
+			Node nd = mNodeList.get(i);
+			if (nd.mRow == row && nd.mCol == col)
+				return nd;
+		}
+		return null;
 	}
 	public ArrayList<TuAtt> getMatchingNodes(int row, int col, NodeAttribute att, String searchTxt) {
 		ArrayList<TuAtt> foundNodes = new ArrayList<TuAtt>();
@@ -2573,11 +2590,11 @@ public class Trial {
 				ArrayList<?> getDistinctValues() {
 					switch (fieldCode) {
 					case FIELD_ROW:
-						//return String.valueOf(tu.getRow());
+					case FIELD_COL:
 						ArrayList<Integer> vals = new ArrayList<Integer>();
 						String qry = String.format(Locale.US,
-								"select distinct %s from %s where %s = %d", ND_ROW, TABLE_NODE,
-								ND_TRIAL_ID, trial.getId());
+								"select distinct %s from %s where %s = %d", fieldCode == FIELD_ROW ? ND_ROW : ND_COL,
+								TABLE_NODE,	ND_TRIAL_ID, trial.getId());
 						Cursor ccr = null;
 						try {
 							ccr = g_db().rawQuery(qry, null);
@@ -2585,7 +2602,6 @@ public class Trial {
 								do vals.add(ccr.getInt(0)); while (ccr.moveToNext());
 						} finally { if (ccr != null) ccr.close(); }
 						return vals;
-					case FIELD_COL:
 					case FIELD_BARCODE:
 					case FIELD_LOCATION:
 					default: return null;
@@ -2621,7 +2637,14 @@ public class Trial {
 		
 		return props;
 	}
-	
+
+	/*
+	 * Fixed Node Properties by name:
+	 */
+	public NodeProperty getFixedNodeProperty(int key) {
+		return mFixedTups.get(key);   // a bit hacky, but the way mFixedTups is set up means this works.
+	}
+
 	/*
 	 * notesAsJSON()
 	 * Returns JSON representation of all local trial notes. For example:
