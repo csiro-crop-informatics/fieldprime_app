@@ -1,6 +1,5 @@
 * text=auto !eol
 FieldPrime/FieldPrime.iml -text
-FieldPrime/app/app.iml -text
 FieldPrime/app/build.gradle -text
 FieldPrime/app/libs/ZSDK_ANDROID_API.jar -text
 FieldPrime/app/proguard-project.txt -text
