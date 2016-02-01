@@ -141,8 +141,8 @@ public class DlgSearch extends DialogFragment {
 						if (spInd > 0)
 							searchAtt = (NodeAttribute) mAttSpin.getSelectedItem();
 						attSearchTxt = ((EditText)mSearchView.findViewById(R.id.searchText)).getText().toString();			
-						search(row, col, searchAtt, attSearchTxt.length() > 0 ? attSearchTxt : null);
-						dlg.dismiss();
+						if (search(row, col, searchAtt, attSearchTxt.length() > 0 ? attSearchTxt : null))
+							dlg.dismiss();
 					}
 				});
 			}
@@ -151,17 +151,16 @@ public class DlgSearch extends DialogFragment {
 		return dlg;
 	}
 
-	private void search(int row, int col, NodeAttribute att, String attTxt) {
+	private boolean search(int row, int col, NodeAttribute att, String attTxt) {
 		mTuAtts = mTrial.getMatchingNodes(row, col, att, attTxt);  // Could take this line to caller, only use of params..
 		if (mTuAtts.size() == 0) {
 			Util.msg("No nodes found");
-			return;
+			return false;
 		}
 		if (mTuAtts.size() == 1) {
 			TuAtt f = mTuAtts.get(0);
 			mCallback.foundNode(mTrial.getNodeById(f.tuid));
 			Util.toast("Going to single matching search result");
-			return;
 		} else {		
 			String[] foundlings = new String[mTuAtts.size()];
 			for (int i = 0; i < mTuAtts.size(); ++i) {
@@ -178,5 +177,6 @@ public class DlgSearch extends DialogFragment {
 				}
 			});
 		}
+		return true;
 	}
 }

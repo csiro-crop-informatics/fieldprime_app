@@ -89,8 +89,8 @@ public class ActTrial extends Globals.Activity
 	private View mPopupAnchor;
 	
 	// Text views for display of 2 node properties (each showing prop name and value):
-	private TextView mNodePropPrompt1;
-	private TextView mNodePropPrompt2;
+//	private TextView mNodePropPrompt1;
+//	private TextView mNodePropPrompt2;
 	private TextView mNodePropValue1;
 	private TextView mNodePropValue2;
 //	private TextView mTVRep;
@@ -476,17 +476,26 @@ public class ActTrial extends Globals.Activity
 		if (mTrial.mShowRowCol) {
 			Node node =  mTrial.getCurrNode();
 			if (node.isLocal()) {
-				mNodePropPrompt1.setText("New");
-				mNodePropValue1.setText("Node");
-				mNodePropPrompt2.setText("" + node.localNumber());
-				mNodePropValue2.setText("");
+				mNodePropValue1.setText("New Node");
+				mNodePropValue2.setText("" + node.localNumber());
 			}
 			else {
-				mNodePropPrompt1.setText(mTrial.getIndexName(0));    // NB really only need to set this once, on creation?
-				mNodePropValue1.setText("" + node.getRow());
-				mNodePropPrompt2.setText(mTrial.getIndexName(1));
-				mNodePropValue2.setText("" + node.getCol());
+				mNodePropValue1.setText(mTrial.getIndexName(0) + " " + node.getRow());
+				mNodePropValue2.setText(mTrial.getIndexName(1) + " " + node.getCol());
 			}
+			// Old way with 2 text views each index
+//			if (node.isLocal()) {
+//				mNodePropPrompt1.setText("New");
+//				mNodePropValue1.setText("Node");
+//				mNodePropPrompt2.setText("" + node.localNumber());
+//				mNodePropValue2.setText("");
+//			}
+//			else {
+//				mNodePropPrompt1.setText(mTrial.getIndexName(0));    // NB really only need to set this once, on creation?
+//				mNodePropValue1.setText("" + node.getRow());
+//				mNodePropPrompt2.setText(mTrial.getIndexName(1));
+//				mNodePropValue2.setText("" + node.getCol());
+//			}
 		}
 		for (PropertyWidget aw : mPropertyWidgets) {
 			aw.RefreshValue();
@@ -1098,10 +1107,12 @@ public class ActTrial extends Globals.Activity
 			 *
 			 * Note we could probably replace each pair of textviews ("row" "1") with a single one ("row 1")
 			 */
-			mNodePropPrompt1 = rcBar.addTextView(mTrial.getIndexName(0), 1);
-			mNodePropValue1 = rcBar.addTextView(null, 1);
-			mNodePropPrompt2 = rcBar.addTextView(mTrial.getIndexName(1), 1);
-			mNodePropValue2 = rcBar.addTextView(null, 1);
+			mNodePropValue1 = rcBar.addTextView(null, 2);
+			mNodePropValue2 = rcBar.addTextView(null, 2);
+//			mNodePropPrompt1 = rcBar.addTextView(mTrial.getIndexName(0), 1);
+//			mNodePropValue1 = rcBar.addTextView(null, 1);
+//			mNodePropPrompt2 = rcBar.addTextView(mTrial.getIndexName(1), 1);
+//			mNodePropValue2 = rcBar.addTextView(null, 1);
 			View.OnClickListener dry = new View.OnClickListener() {
 				@Override
 				public void onClick(View arg0) {
