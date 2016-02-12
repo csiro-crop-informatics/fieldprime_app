@@ -1849,13 +1849,13 @@ public class Trial {
 	/*
 	 * processJSONNodeAttributeValues()
 	 */
-	private void processJSONNodeAttributeValues(JSONObject jtu, Node tu) throws JSONException {
+	private void processJSONNodeAttributeValues(JSONObject jnode, Node node) throws JSONException {
 		// Get optional attributes:
-		if (jtu.has(JNODE_ATTVALS)) {
-			JSONObject jnatts = jtu.getJSONObject(JNODE_ATTVALS);
+		if (jnode.has(JNODE_ATTVALS)) {
+			JSONObject jnatts = jnode.getJSONObject(JNODE_ATTVALS);
 			for (NodeAttribute att : mAttributeList) {
 				if (!jnatts.isNull(att.name()))
-					tu.setAttributeValue(att, jnatts.getString(att.name()));
+					node.setAttributeValue(att, jnatts.getString(att.name()));
 			}
 		}
 	}
@@ -1966,18 +1966,7 @@ public class Trial {
 		processJSONTrialPropertyValues(json);
 		
 		// Nodes:
-		/*
-		 * This if below should be removed when there are no longer clients expecting
-		 * only JTRL_TRIALUNITS_ARRAY. This catch installed for client version 362 (svn).
-		 * Eventually should just be:
-		 *   res = processJSONNodes(json.getJSONArray(JTRL_NODES_ARRAY), update, prog);
-		 */
-		JSONArray nodesArray;
-		if (json.has(JTRL_NODES_ARRAY))
-			nodesArray = json.getJSONArray(JTRL_NODES_ARRAY);
-		else
-			nodesArray = json.getJSONArray(JTRL_TRIALUNITS_ARRAY);
-		res = processJSONNodes(nodesArray, update, prog);
+		res = processJSONNodes(json.getJSONArray(JTRL_NODES_ARRAY), update, prog);
 		if (res.bad())
 			return res;
 		
