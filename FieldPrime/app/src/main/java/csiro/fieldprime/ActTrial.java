@@ -30,9 +30,6 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemSelectedListener;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
@@ -40,7 +37,6 @@ import android.widget.LinearLayout.LayoutParams;
 import android.widget.PopupMenu;
 import android.widget.PopupMenu.OnMenuItemClickListener;
 import android.widget.ScrollView;
-import android.widget.Spinner;
 import android.widget.TextView;
 import csiro.fieldprime.ActBluetooth.BluetoothConnection;
 import csiro.fieldprime.Datum.CallOut;
@@ -1697,8 +1693,21 @@ public class ActTrial extends Globals.Activity
 	 * Value received from bluetooth device, intended for navigating to a plot.
 	 */
 	@Override
-	public void handleNavigationValue(String barcode) {
+	public void handleNavigationValue(String barcode, NodeAttribute barcodeAttribute) {
 		if (TrialOpen()) {
+			if (barcodeAttribute != null) {
+				// Note only navigate if unique node matches barcode, perhaps we should offer choice.
+				ArrayList<Long> nids = mTrial.getMatchingNodes(barcodeAttribute, barcode);
+				if (nids.size() == 1) {
+					mTrial.gotoNodebyId(nids.get(0));
+					refreshNodeScreen();
+					return;
+				} else {
+					Util.msg((nids.size() == 0 ? "No node found" : "Multiple nodes found") +  " with barcode " + barcode);
+					return;
+				}
+			}
+
 			/*
 			 *  See if any of the scoring traits have a barcode attribute.
 			 *  If so, look up the barcode. First match found is used.
@@ -1719,7 +1728,7 @@ public class ActTrial extends Globals.Activity
 				}
 			}
 			
-			if (mTrial.gotoNode(barcode))
+			if (mTrial.gotoNodeByBarcode(barcode))
 				refreshNodeScreen();
 			else
 				Util.msg("No node found with barcode " + barcode);
@@ -1766,7 +1775,7 @@ public class ActTrial extends Globals.Activity
 	
 
 	/*
-	 * HandleBluetoothDataValue()
+	 * handleBluetoothDataValue()
 	 * Value received from bluetooth device, intended for scoring.
 	 * Note - if a trait has been associated with the device (devTrait not null),
 	 * then we search for an unscored score set of that trait within the
@@ -1777,7 +1786,7 @@ public class ActTrial extends Globals.Activity
 	 * If devTrait is null, then we assume the score is intended for the current datum.
 	 */
 	@Override
-	public void HandleBluetoothDataValue(String val, Trait devTrait) {
+	public void handleBluetoothDataValue(String val, Trait devTrait) {
 		if (TrialOpen()) {
 			if (mDatum != null) {
 				Trait trt = mDatum.GetTrait();
@@ -1792,7 +1801,79 @@ public class ActTrial extends Globals.Activity
 				Util.msg("Not currently entering a score");
 		}
 	}
+	public void handleBluetoothValue(String val, ActBluetooth.MyBluetoothDevice btDev) {
+		if (!TrialOpen()) return;
 
+		if (btDev.isNavigator()) {
+			/***
+			 * User has specified this device is used for navigation, which means identifying
+			 * and moving to specific nodes, and possible to the scoring screen for a specific
+			 * trait.
+			 *
+			 * If a barcode attribute has been selected then we search in that attribute for a
+			 * node with val for the value for that attribute, if found, navigate to that node.
+			 * If not found we show message and return.
+			 *
+			 * Otherwise we look to see if any of the traits currently being scored have a barcode
+			 * attribute configured. For each of these traits we see if the value matches the
+			 * configured attribute at any node. If so (for the first instance found), we navigate
+			 * to that node, and to the scoring screen for that trait.
+			 *
+			 * If that search fails, then we search for a match in the Node barcode field.
+			 */
+			NodeAttribute barcodeAttribute = btDev.getBarcodeAttribute();
+			if (barcodeAttribute != null) {
+				// Note only navigate if unique node matches barcode, perhaps we should offer choice.
+				ArrayList<Long> nids = mTrial.getMatchingNodes(barcodeAttribute, val);
+				if (nids.size() == 1) {
+					mTrial.gotoNodebyId(nids.get(0));
+					refreshNodeScreen();
+					return;
+				} else {
+					Util.msg((nids.size() == 0 ? "No node found" : "Multiple nodes found") +  " with barcode " + val);
+					return;
+				}
+			}
+
+			/*
+			 *  See if any of the scoring traits have a barcode attribute.
+			 *  If so, look up the barcode. First match found is used.
+			 */
+			for (RepSet rs : mScoreSets) {
+				Trait trt = rs.getTrait();
+				NodeAttribute bcAtt = mTrial.getAttribute(trt.getBarcodeAttributeId());
+				if (bcAtt != null) {
+					// look up barcode in this attribute:
+					// MFK note no checks for ambiguous barcodes.
+					ArrayList<Long> nids = mTrial.getMatchingNodes(bcAtt, val);
+					if (nids.size() == 1) {
+						mTrial.gotoNodebyId(nids.get(0));
+						refreshNodeScreen();
+						gotoTraitFirstUnscored(trt, true);
+						return;
+					}
+				}
+			}
+
+			if (mTrial.gotoNodeByBarcode(val))
+				refreshNodeScreen();
+			else
+				Util.msg("No node found with barcode " + val);
+		} else { // Value is a score
+			if (mDatum != null) {
+				Trait trt = mDatum.GetTrait();
+				Trait devTrait = btDev.getTrait();
+				if (devTrait != null && trt != devTrait && !gotoTraitFirstUnscored(devTrait, false)) {
+					Util.msg("No unscored instance of trait " + devTrait.getCaption() + " in current node");
+					return;
+				}
+				if (!mDatum.processTextValue(val)) {
+					Util.msg("Could not set score");
+				}
+			} else
+				Util.msg("Not currently entering a score");
+		}
+	}
 	/*
 	 * addBluetoothConnection()
 	 * Called when a new bluetooth connection is made for this trial.

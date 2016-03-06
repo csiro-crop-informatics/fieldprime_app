@@ -673,11 +673,11 @@ public class Trial {
 	//*** Node Stuff: **************************************************************************
 
 	/*
-	 * gotoNode()
+	 * gotoNodeByBarcode()
 	 * Find node by barcode in current list.
 	 * If this becomes too slow, we could search based on the current ordering, or maintain an index list of some kind.
 	 */
-	public boolean gotoNode(String barcode) {
+	public boolean gotoNodeByBarcode(String barcode) {
 		for (int i = 0; i < mNodeList.size(); ++i) {
 			Node tu = mNodeList.get(i);
 			if (tu.mBarcode.equalsIgnoreCase(barcode)) {
@@ -894,6 +894,7 @@ public class Trial {
 	/*
 	 * getMatchingNodes()
 	 * NB doesn't rely on Trial..
+	 * ..which presumably suggests this should be a NodeAttribute method.
 	 */
 	public ArrayList<Long> getMatchingNodes(NodeAttribute att, String searchTxt) {
 		ArrayList<Long> nlist = new ArrayList<Long>();

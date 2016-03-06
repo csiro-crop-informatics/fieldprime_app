@@ -148,11 +148,11 @@ public class ViewLine extends LinearLayout {
 	 * addSpinner()
 	 * Add spinner 
 	 */
-	Spinner addSpinner(ArrayList<?> items, String nullPrompt, Object initialSelection) {
+	Spinner addSpinner(ArrayList<?> items, String nullPrompt, Object initialSelection, boolean dialogMode) {
 		ArrayList<Object> oblist = new ArrayList<Object>(items); // make object version so we can insert string prompt
 		if (nullPrompt != null)
 			oblist.add(0, nullPrompt);
-		Spinner spin = new Spinner(mCtx);
+		Spinner spin = dialogMode ? (new Spinner(mCtx, Spinner.MODE_DIALOG)) : (new Spinner(mCtx));
 		ArrayAdapter<Object> adapter = new ArrayAdapter<Object>(mCtx, android.R.layout.simple_spinner_item, oblist) {
 			@Override
 			public View getView(int position, View convertView, ViewGroup parent) {
@@ -179,6 +179,10 @@ public class ViewLine extends LinearLayout {
 		addView(spin);
 		return spin;
 	}
+	Spinner addSpinner(ArrayList<?> items, String nullPrompt, Object initialSelection) {
+		return addSpinner(items, nullPrompt, initialSelection, false);
+	}
+
 	Spinner addSpinnerWithWeight(ArrayList<?> items, String nullPrompt, Object initialSelection, float weight) {
 		ArrayList<Object> oblist = new ArrayList<Object>(items); // make object version so we can insert string prompt
 		if (nullPrompt != null)

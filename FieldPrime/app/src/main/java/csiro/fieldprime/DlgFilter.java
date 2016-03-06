@@ -65,7 +65,7 @@ public class DlgFilter extends DialogFragment {
 		 */
 		mMainView = new VerticalList(getActivity(), false);
 		// Add attribute spinner:
-		mMainView.addText("Filter Attribute:");
+		mMainView.addTextNormal("Filter Attribute:");
 		mAttSpin = mMainView.addSpinner(trl.getAttributes(), "-- No Filter --", nodeAtt);
 		mAttSpin.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
 			@Override
@@ -90,7 +90,7 @@ public class DlgFilter extends DialogFragment {
 		});
 
 		// Add edit text for value, with prompt:
-		mMainView.addText("Filter Value:");
+		mMainView.addTextNormal("Filter Value:");
 
 		// check nat null case, change on attribute spinner selection
 		// MFK - where do we set the current value?

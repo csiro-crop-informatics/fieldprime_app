@@ -77,11 +77,11 @@ public abstract class Trait {
         private Datatype(int value) {
                 mValue = value;
         }
-        
-        /*
-         * value()
-         * Convert Datatype to int.
-         */
+
+		/*
+                 * value()
+                 * Convert Datatype to int.
+                 */
         public int value() { return mValue; }
         
         /*
@@ -253,7 +253,13 @@ public abstract class Trait {
 	abstract boolean SupportsBluetoothScoring();
 	
 	// FUNCTIONS: ====================================================================================================
-	
+
+
+	@Override
+	public String toString() {
+		return this.getCaption();
+	}
+
 	static protected SQLiteDatabase g_db() {
 		return Globals.g.db();
 	}
