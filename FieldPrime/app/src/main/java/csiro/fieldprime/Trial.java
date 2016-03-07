@@ -1619,10 +1619,10 @@ public class Trial {
 	}
 
 	/*
-	 * GetTraitList()
+	 * getTraitList()
 	 * Returns mTraitList as array.
 	 */
-	public Trait[] GetTraitList() {
+	public Trait[] getTraitList() {
 		return mTraitList.toArray(new Trait[mTraitList.size()]);
 	}
 

@@ -161,7 +161,8 @@ public class DlgSearch extends DialogFragment {
 			TuAtt f = mTuAtts.get(0);
 			mCallback.foundNode(mTrial.getNodeById(f.tuid));
 			Util.toast("Going to single matching search result");
-		} else {		
+		} else {
+
 			String[] foundlings = new String[mTuAtts.size()];
 			for (int i = 0; i < mTuAtts.size(); ++i) {
 				TuAtt f = mTuAtts.get(i);

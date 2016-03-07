@@ -42,6 +42,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import csiro.fieldprime.Trial.NodeAttribute;
+//import csiro.fieldprime.Trial.NodeProperty;
 
 /*
  * Show list of paired devices, have search button to optionally also show
@@ -54,8 +55,9 @@ import csiro.fieldprime.Trial.NodeAttribute;
 
 public class ActBluetooth extends VerticalList.VLActivity {
     interface handlers {
-		void handleNavigationValue(String barcode, NodeAttribute barcodeAttribute);
-		void handleBluetoothDataValue(String value, Trait trt);
+		//void handleNavigationValue(String barcode, NodeAttribute barcodeAttribute);
+		//void handleBluetoothDataValue(String value, Trait trt);
+		void handleBluetoothValue(String value, MyBluetoothDevice btDev);
     }
 
 	private BluetoothAdapter mBluetoothAdapter = null;
@@ -186,49 +188,43 @@ public class ActBluetooth extends VerticalList.VLActivity {
 			return;
 		}
 
+		DlgBTconnect.newInstance(device);
+		return;
 
-		if (true) {
-//			DlgBTconnect fred = new DlgBTconnect();
-//			fred.show(Globals.FragMan(), "dlgBTconnect");
-			DlgBTconnect.newInstance(device);
-			return;
-		}
-
-
-		final Trait[] traits = g.currTrial().GetTraitList();
-
-		/*
-		 * Construct list of options for use of device once connected.
-		 */
-		ArrayList<String> traitNames = new ArrayList<String>();
-		traitNames.add("<Use for navigation (plot barcodes)>");
-		traitNames.add("<Use for any trait>");
-		for (Trait t : traits) {
-			traitNames.add(t.getCaption());
-		}
-		String[] listStrings = new String[traitNames.size()];
-		listStrings = traitNames.toArray(listStrings);
-		// Show list to user for selection. The selection handler is in the onListSelect function.
-		DlgList.newInstanceSingle(0, "Choose Trait to Score", listStrings,  new DlgList.ListSelectHandler() {
-			@Override
-			public void onListSelect(int index, int which) {
-				device.setNavigator(which == 0);
-				if (which > 1) {
-					device.setTrait(traits[which - 2]);
-				}
-				Util.toast("Trying to connect to " + device.getName());
-				BluetoothConnection btc = new BluetoothConnection();
-				ActTrial.mActTrial.addBluetoothConnection(btc);
-					/*
-					 * MFK This use of mActTrial should be replaced, since in some circumstances
-					 * mActTrial will be null.
-					 */
-				
-				// NB we may have multiple bluetooths working so we need them to be able to
-				// multitask - hence the call to executeOnExecutor() rather than just execute().
-				btc.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, new MyBluetoothDevice[] { device });
-			}
-		});
+//		final Trait[] traits = g.currTrial().getTraitList();
+//
+//		/*
+//		 * Construct list of options for use of device once connected.
+//		 */
+//		ArrayList<String> traitNames = new ArrayList<String>();
+//		traitNames.add("<Use for navigation (plot barcodes)>");
+//		traitNames.add("<Use for any trait>");
+//		for (Trait t : traits) {
+//			traitNames.add(t.getCaption());
+//		}
+//		String[] listStrings = new String[traitNames.size()];
+//		listStrings = traitNames.toArray(listStrings);
+//		// Show list to user for selection. The selection handler is in the onListSelect function.
+//		DlgList.newInstanceSingle(0, "Choose Trait to Score", listStrings,  new DlgList.ListSelectHandler() {
+//			@Override
+//			public void onListSelect(int index, int which) {
+//				device.setNavigator(which == 0);
+//				if (which > 1) {
+//					device.setTrait(traits[which - 2]);
+//				}
+//				Util.toast("Trying to connect to " + device.getName());
+//				BluetoothConnection btc = new BluetoothConnection();
+//				ActTrial.mActTrial.addBluetoothConnection(btc);
+//					/*
+//					 * MFK This use of mActTrial should be replaced, since in some circumstances
+//					 * mActTrial will be null.
+//					 */
+//
+//				// NB we may have multiple bluetooths working so we need them to be able to
+//				// multitask - hence the call to executeOnExecutor() rather than just execute().
+//				btc.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, new MyBluetoothDevice[] { device });
+//			}
+//		});
     }
 
 	@Override
@@ -268,7 +264,7 @@ public class ActBluetooth extends VerticalList.VLActivity {
     class MyBluetoothDevice{
       	private BluetoothDevice mDevice;
       	private boolean mNavigator;
-		private NodeAttribute mBarcodeAttribute;
+		private Trial.NodeAttribute mBarcodeAttribute;
       	private Trait mTrait;
       	private boolean mConnected;
       	
@@ -435,10 +431,7 @@ public class ActBluetooth extends VerticalList.VLActivity {
     		} else {
     			handlers h = getHandler();
     			if (h != null) {
-	    			if (mDevice.isNavigator())
-	    				h.handleNavigationValue(values[0], mDevice.getBarcodeAttribute());
-	    			else
-	    				h.handleBluetoothDataValue(values[0], mDevice.getTrait());
+					h.handleBluetoothValue(values[0], mDevice);
     			}
     		}
     		super.onProgressUpdate(values);
@@ -488,8 +481,6 @@ public class ActBluetooth extends VerticalList.VLActivity {
 		@Override
 		public Dialog onCreateDialog(Bundle savedInstanceState) {
 			Trial trl = ((Globals)getActivity().getApplication()).currTrial();
-			Pstate pstate = trl.getPstate();
-			NodeAttribute nodeAtt = pstate.getFilterAttribute();
 
 			/*
 			 * Set up vlist with attribute selection spinner, and then when an
@@ -506,12 +497,23 @@ public class ActBluetooth extends VerticalList.VLActivity {
 						@Override
 						public void onClick(View v) {
 							RadioButton rb = (RadioButton) v;
-							int foo = v.getId();
-							mNav.setVisibility(foo == CHOICE_NAVIGATION ? View.VISIBLE : View.GONE);
-							mNavSpinner.setVisibility(foo == CHOICE_NAVIGATION ? View.VISIBLE : View.GONE);
-							//mAnyTrait.setVisibility(foo == CHOICE_ANY_TRAIT ? View.VISIBLE : View.GONE);
-							mSpecificTrait.setVisibility(foo == CHOICE_SPECIFIC_TRAIT ? View.VISIBLE : View.GONE);
-							mSpecificTraitSpinner.setVisibility(foo == CHOICE_SPECIFIC_TRAIT ? View.VISIBLE : View.GONE);
+							int which = v.getId();
+							// Clear/show choice specific items:
+							mNav.setVisibility(which == CHOICE_NAVIGATION ? View.VISIBLE : View.GONE);
+							mNavSpinner.setVisibility(which == CHOICE_NAVIGATION ? View.VISIBLE : View.GONE);
+							mSpecificTrait.setVisibility(which == CHOICE_SPECIFIC_TRAIT ? View.VISIBLE : View.GONE);
+							mSpecificTraitSpinner.setVisibility(which == CHOICE_SPECIFIC_TRAIT ? View.VISIBLE : View.GONE);
+							// reset both spinners to avoid remembered state
+							mNavSpinner.setSelection(0);
+							mSpecificTraitSpinner.setSelection(0);
+//							switch (which) {
+//								case CHOICE_NAVIGATION:
+//									break;
+//								case CHOICE_ANY_TRAIT:
+//									break;
+//								case CHOICE_SPECIFIC_TRAIT:
+//									break;
+//							}
 						}
 					});
 
@@ -520,13 +522,14 @@ public class ActBluetooth extends VerticalList.VLActivity {
 			// Navigation extras:
 			mNav = mMainView.addTextNormal("Navigation attribute:");
 			mNav.setVisibility(View.GONE);
-			mNavSpinner = mMainView.addSpinner(g.currTrial().getAttributes(), "..Select Attribute..", null);
+			mNavSpinner = mMainView.addSpinner(trl.getAttributes(), " Barcode (default)", null);
+			//mNavSpinner = mMainView.addSpinner(trl.getNodeProperties(), "..Select Attribute..", null);
 			mNavSpinner.setPrompt("coconuts");
 			mNavSpinner.setVisibility(View.GONE);
 			// Specific trait extras:
 			mSpecificTrait = mMainView.addTextNormal("Trait to score:");
 			mSpecificTrait.setVisibility(View.GONE);
-			mSpecificTraitSpinner = mMainView.addSpinner(new ArrayList<Trait>(Arrays.asList(g.currTrial().GetTraitList())),
+			mSpecificTraitSpinner = mMainView.addSpinner(new ArrayList<Trait>(Arrays.asList(trl.getTraitList())),
 					"..Select Trait..", null);
 			mSpecificTraitSpinner.setVisibility(View.GONE);
 
@@ -555,7 +558,12 @@ public class ActBluetooth extends VerticalList.VLActivity {
 										NodeAttribute att = (NodeAttribute) mNavSpinner.getSelectedItem();
 										Util.msg("trait.name: " + att.name());
 										mDevice.setNavAttribute(att);
-									}									break;
+
+//										Trial.NodeProperty att = (Trial.NodeProperty) mNavSpinner.getSelectedItem();
+//										Util.msg("trait.name: " + att.name());
+//										//mDevice.setNavAttribute(att);
+									}
+									break;
 								case CHOICE_ANY_TRAIT:
 									break;
 								case CHOICE_SPECIFIC_TRAIT:

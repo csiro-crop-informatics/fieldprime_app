@@ -20,7 +20,7 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
-import csiro.fieldprime.R;
+
 import csiro.fieldprime.Trait.Datatype;
 
 public class TraitDialog extends DialogFragment implements View.OnClickListener {
@@ -72,7 +72,7 @@ public class TraitDialog extends DialogFragment implements View.OnClickListener 
 	 */
 	private void FillFields() {
 		// Trait selection spinner:
-		mTraitList = mDs.GetTraitList();
+		mTraitList = mDs.getTraitList();
 		mTraitsAdapter = new ArrayAdapter<CharSequence>(mCtx, android.R.layout.simple_spinner_item);
 		for (Trait t : mTraitList)
 			mTraitsAdapter.add(t.getCaption());
