@@ -1686,55 +1686,7 @@ public class ActTrial extends Globals.Activity
 			break;
 		}
 	}
-	
-		
-	/*
-	 * handleNavigationValue()
-	 * Value received from bluetooth device, intended for navigating to a plot.
-	 */
-//	@Override
-//	public void handleNavigationValue(String barcode, NodeAttribute barcodeAttribute) {
-//		if (TrialOpen()) {
-//			if (barcodeAttribute != null) {
-//				// Note only navigate if unique node matches barcode, perhaps we should offer choice.
-//				ArrayList<Long> nids = mTrial.getMatchingNodes(barcodeAttribute, barcode);
-//				if (nids.size() == 1) {
-//					mTrial.gotoNodebyId(nids.get(0));
-//					refreshNodeScreen();
-//					return;
-//				i} else {
-//					Util.msg((nids.size() == 0 ? "No node found" : "Multiple nodes found") +  " with barcode " + barcode);
-//					return;
-//				}
-//			}
-//
-//			/*
-//			 *  See if any of the scoring traits have a barcode attribute.
-//			 *  If so, look up the barcode. First match found is used.
-//			 */
-//			for (RepSet rs : mScoreSets) {
-//				Trait trt = rs.getTrait();
-//				NodeAttribute bcAtt = mTrial.getAttribute(trt.getBarcodeAttributeId());
-//				if (bcAtt != null) {
-//					// look up barcode in this attribute:
-//					// MFK note no checks for ambiguous barcodes.
-//					ArrayList<Long> nids = mTrial.getMatchingNodes(bcAtt, barcode);
-//					if (nids.size() == 1) {
-//						mTrial.gotoNodebyId(nids.get(0));
-//						refreshNodeScreen();
-//						gotoTraitFirstUnscored(trt, true);
-//						return;
-//					}
-//				}
-//			}
-//
-//			if (mTrial.gotoNodeByBarcode(barcode))
-//				refreshNodeScreen();
-//			else
-//				Util.msg("No node found with barcode " + barcode);
-//		}
-//	}
-	
+
 	
 	/*
 	 * GotoTraitFirstUnscored()
@@ -1774,36 +1726,8 @@ public class ActTrial extends Globals.Activity
 	}
 	
 
-//	/*
-//	 * handleBluetoothDataValue()
-//	 * Value received from bluetooth device, intended for scoring.
-//	 * Note - if a trait has been associated with the device (devTrait not null),
-//	 * then we search for an unscored score set of that trait within the
-//	 * trait selector (i.e. the currently selected traits), if one is found (note
-//	 * there could be multiple is the trait has multiple reps) then we set the
-//	 * first one found to the specified value. Note the trait selector doesn't have
-//	 * to currently be on an instance of the specified trait.
-//	 * If devTrait is null, then we assume the score is intended for the current datum.
-//	 */
-//	@Override
-//	public void handleBluetoothDataValue(String val, Trait devTrait) {
-//		if (TrialOpen()) {
-//			if (mDatum != null) {
-//				Trait trt = mDatum.GetTrait();
-//				if (devTrait != null && trt != devTrait && !gotoTraitFirstUnscored(devTrait, false)) {
-//				        Util.msg("No unscored instance of trait " + devTrait.getCaption() + " in current node");
-//				        return;
-//				}
-//				if (!mDatum.processTextValue(val)) {
-//					Util.msg("Could not set score");
-//				}
-//			} else
-//				Util.msg("Not currently entering a score");
-//		}
-//	}
 	public void handleBluetoothValue(String val, ActBluetooth.MyBluetoothDevice btDev) {
 		if (!TrialOpen()) return;
-
 		if (btDev.isNavigator()) {
 			/***
 			 * User has specified this device is used for navigation, which means identifying
@@ -1832,7 +1756,6 @@ public class ActTrial extends Globals.Activity
 				} else if (nids.size() == 0) {
 					Util.msg("No node found with barcode " + val);
 				} else {
-					Util.msg("Multiple nodes found with barcode " + val);
 					String[] nodelist = new String[nids.size()];
 					for (int i = 0; i < nids.size(); ++i) {
 						Node node = mTrial.getNodeById(nids.get(i));
@@ -1843,7 +1766,9 @@ public class ActTrial extends Globals.Activity
 							nodelist, new DlgList.ListSelectHandler() {
 								@Override
 								public void onListSelect(int context, int which) {
+									Util.msg("which " + which + " nidswhich " + nids.get(which));
 									mTrial.gotoNodebyId(nids.get(which));
+									refreshNodeScreen();
 								}
 							});
 				}
@@ -1901,6 +1826,7 @@ public class ActTrial extends Globals.Activity
 				Util.msg("Not currently entering a score");
 		}
 	}
+
 	/*
 	 * addBluetoothConnection()
 	 * Called when a new bluetooth connection is made for this trial.

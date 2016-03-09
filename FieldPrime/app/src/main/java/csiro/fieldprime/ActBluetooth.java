@@ -8,6 +8,13 @@
  * Navigation
  * Scoring for a specific trait
  * Scoring for any trait.
+ *
+ * ToDo
+ * Save MyBluetoothDevices against hardware device ids, remake open connections
+ * after trial/app close and reopen.
+ * Add disconnect option - should be able to keep configuration when disconnected?
+ * Yes I think so. Either when device disconnects or user initiated.
+ * Maybe timer to keep trying to connect?
  */
 
 package csiro.fieldprime;
@@ -60,9 +67,15 @@ public class ActBluetooth extends VerticalList.VLActivity {
 		void handleBluetoothValue(String value, MyBluetoothDevice btDev);
     }
 
+	final int SCAN = 1;
+	final int CONNECT = 2;
+	final int DISCONNECT = 3;
+
 	private BluetoothAdapter mBluetoothAdapter = null;
 	private ArrayList<MyBluetoothDevice> mDeviceList = new ArrayList<MyBluetoothDevice>();
 	private TextView mText;
+	private ButtonBar mButtonBar;
+	private Button mConnectButton;
 
     static final byte  mMTEnd[] = new byte[] {27,101,110,116,101,114,46};   // bytes at end of Mettler Toledo scale send
 
@@ -107,7 +120,7 @@ public class ActBluetooth extends VerticalList.VLActivity {
 
 //		Iterator<MyBluetoothDevice> iter = mDeviceList.iterator();
 //		while (iter.hasNext()) {
-//		    if (!iter.next().Connected()) {
+//		    if (!iter.next().connected()) {
 //		        iter.remove();
 //		    }
 //		}
@@ -135,8 +148,14 @@ public class ActBluetooth extends VerticalList.VLActivity {
 
 	@Override
 	void listSelect(int index) {
-		MyBluetoothDevice d = mDeviceList.get(index);
-		mText.setText(d.Details());
+		MyBluetoothDevice md = mDeviceList.get(index);
+		// if connected, add disconnect button
+		String label = md.connected() ? "Disconnect" : "Connect";
+		if (mConnectButton == null)
+			mConnectButton = mButtonBar.addButton(label, CONNECT);
+		else
+			mConnectButton.setText(label);
+		mText.setText(md.details());
 	}
 		
 	@Override
@@ -145,7 +164,7 @@ public class ActBluetooth extends VerticalList.VLActivity {
 		return mText; 
 	}
 	
-    private void Scan() {
+    private void scan() {
 		Toast.makeText(getBaseContext(),
 				"Searching for devices, make sure your device is discoverable", Toast.LENGTH_SHORT).show();
 		BroadcastReceiver myReceiver = new BroadcastReceiver() {
@@ -179,82 +198,74 @@ public class ActBluetooth extends VerticalList.VLActivity {
 		return (btd.getBluetoothClass().getDeviceClass() == 1664);
 	}
 
-	void connect(final MyBluetoothDevice device) {
-		if (isPrinter(device.device())) {
-			device.device().getAddress();
-			// Get and remember the mac address, have to get this back to the scoring activity
-			g.setPrinterMacAddr(device.device().getAddress());
-			Util.msg("Set as current printer");
-			return;
-		}
-
-		DlgBTconnect.newInstance(device);
-		return;
-
-//		final Trait[] traits = g.currTrial().getTraitList();
-//
-//		/*
-//		 * Construct list of options for use of device once connected.
-//		 */
-//		ArrayList<String> traitNames = new ArrayList<String>();
-//		traitNames.add("<Use for navigation (plot barcodes)>");
-//		traitNames.add("<Use for any trait>");
-//		for (Trait t : traits) {
-//			traitNames.add(t.getCaption());
+//	private void connect(final MyBluetoothDevice device) {
+//		if (isPrinter(device.device())) {
+//			device.device().getAddress();
+//			// Get and remember the mac address, have to get this back to the scoring activity
+//			g.setPrinterMacAddr(device.device().getAddress());
+//			Util.msg("Set as current printer");
+//			return;
 //		}
-//		String[] listStrings = new String[traitNames.size()];
-//		listStrings = traitNames.toArray(listStrings);
-//		// Show list to user for selection. The selection handler is in the onListSelect function.
-//		DlgList.newInstanceSingle(0, "Choose Trait to Score", listStrings,  new DlgList.ListSelectHandler() {
-//			@Override
-//			public void onListSelect(int index, int which) {
-//				device.setNavigator(which == 0);
-//				if (which > 1) {
-//					device.setTrait(traits[which - 2]);
-//				}
-//				Util.toast("Trying to connect to " + device.getName());
-//				BluetoothConnection btc = new BluetoothConnection();
-//				ActTrial.mActTrial.addBluetoothConnection(btc);
-//					/*
-//					 * MFK This use of mActTrial should be replaced, since in some circumstances
-//					 * mActTrial will be null.
-//					 */
 //
-//				// NB we may have multiple bluetooths working so we need them to be able to
-//				// multitask - hence the call to executeOnExecutor() rather than just execute().
-//				btc.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, new MyBluetoothDevice[] { device });
-//			}
-//		});
-    }
+//		DlgBTconnect.newInstance(device);
+//		return;
+//    }
+
+//	private void disconnect(final MyBluetoothDevice device) {
+//		device.myCancel();
+//		if (isPrinter(device.device())) {
+//			device.device().getAddress();
+//			// Get and remember the mac address, have to get this back to the scoring activity
+//			g.setPrinterMacAddr(device.device().getAddress());
+//			Util.msg("Set as current printer");
+//			return;
+//		}
+//
+//		DlgBTconnect.newInstance(device);
+//		return;
+//    }
 
 	@Override
 	View getBottomView() {
-		final int SCAN = 1;
-		final int CONNECT = 2;
-		ButtonBar bb = new ButtonBar(this, new View.OnClickListener() {
+mConnectButton = null;
+		mButtonBar = new ButtonBar(this, new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
 				switch (v.getId()) {
 				case SCAN:
-					Scan();   // MFK how about disabling stuff while scanning?
+					scan();   // MFK how about disabling stuff while scanning?
 					break;
 				case CONNECT:
+// may be disconnect, check label, and/or isConnected() (which should be kept accurate in all cases)
 					if (mCurrSelection < 0) break;
-					connect(mDeviceList.get(mCurrSelection));
+					mDeviceList.get(mCurrSelection).connect();
+					break;
+				case DISCONNECT:
+					if (mCurrSelection < 0) break;
+					mDeviceList.get(mCurrSelection).disconnect();
 					break;
 				}
 			}
 		});
-		bb.addButton("Scan", SCAN);
-		bb.addButton("Connect", CONNECT);
-		return bb.Layout();
+		mButtonBar.addButton("scan", SCAN);
+// Connect button now added and managed in listSelect.
+//		mConnectButton = mButtonBar.addButton("Connect", CONNECT);
+		return mButtonBar.Layout();
 	}
 	
 	@Override
 	void hideKeyboard() {}
-	
-    /*
-     * MyBluetoothDevice
+
+	private handlers getHandler() {
+		Activity curr = g.getCurrentActivity();
+		if (curr instanceof handlers)
+			return (handlers)curr;
+		else
+			return null;
+	}
+
+	/*** class MyBluetoothDevice: ************************************************************************************
+     *
      * Bluetooth device with some extra stuff. (Note extending BluetoothDevice is not possible, it seems).
      * These are used in an ArrayAdapter, and we use toString to define presentation string in the list.
      * Each device may have an associated trait (mTrait), if this is set, then the scores from the
@@ -267,6 +278,7 @@ public class ActBluetooth extends VerticalList.VLActivity {
 		private Trial.NodeAttribute mBarcodeAttribute;
       	private Trait mTrait;
       	private boolean mConnected;
+		private BluetoothConnection mBtConnection;
       	
       	MyBluetoothDevice(BluetoothDevice btd) {
       		mDevice = btd;
@@ -287,7 +299,7 @@ public class ActBluetooth extends VerticalList.VLActivity {
     		}
     		String config;
     		if (!mConnected) {
-    			config = "Not Connected";
+    			config = "Not connected";
     		} else {
     			config = "Connected";
     			if (isNavigator()) config += " for navigation";
@@ -309,42 +321,57 @@ public class ActBluetooth extends VerticalList.VLActivity {
 			mTrait = null;
 		}
     	public boolean isNavigator() { return mNavigator; }
-    	public void SetConnected(boolean connected) { mConnected = connected; }
-    	public boolean Connected() { return mConnected; }
+    	public void setConnected(boolean connected) { mConnected = connected; }
+    	public boolean connected() { return mConnected; }
 
-		public CharSequence Details() {
+		public CharSequence details() {
 			return toString();
 		}
 
 		public NodeAttribute getBarcodeAttribute() { return mBarcodeAttribute; }
 
+		private void connect() {
+			if (isPrinter(device())) {
+				device().getAddress();
+				// Get and remember the mac address, have to get this back to the scoring activity
+				g.setPrinterMacAddr(device().getAddress());
+				Util.msg("Set as current printer");
+				return;
+			}
+			DlgBTconnect.newInstance(this);
+			return;
+		}
+
+		void disconnect() {
+			if (mBtConnection != null)
+				mBtConnection.myCancel();
+			setConnected(false);
+		}
+
 		public void asyncRunDevice() {
 			Util.toast("Trying to connect to " + mDevice.getName());
-			BluetoothConnection btc = new BluetoothConnection();
-			/*
-			 * MFK This use of mActTrial should be replaced, since in some circumstances
-			 * mActTrial will be null.
-			 */
-			ActTrial.mActTrial.addBluetoothConnection(btc);
-			/*
-			 * NB we may have multiple bluetooths working so we need them to be able to
-			 * multitask - hence the call to executeOnExecutor() rather than just execute().
-			 */
-			btc.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, new MyBluetoothDevice[] { this });
+			if (connected()) {
+				Util.toast("Already connected to " + mDevice.getName());
+			} else {
+				mBtConnection = new BluetoothConnection();
+				/*
+				 * MFK This use of mActTrial should be replaced, since in some circumstances
+				 * mActTrial will be null.
+				 */
+				ActTrial.mActTrial.addBluetoothConnection(mBtConnection);
+				/*
+				 * NB we may have multiple bluetooths working so we need them to be able to
+				 * multitask - hence the call to executeOnExecutor() rather than just execute().
+				 */
+				mBtConnection.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, new MyBluetoothDevice[]{this});
+			}
 		}
 	}
-    
-	private handlers getHandler() {
-		Activity curr = g.getCurrentActivity();
-		if (curr instanceof handlers)
-			return (handlers)curr;
-		else
-			return null;
-	}
 
-    /*
-     * BluetoothConnection
-     * Thread to connect to device and redirect the data from it.
+	/*** class BluetoothConnection: ***********************************************************************************
+	 *
+	 * AsyncTask for handling communication with single bluetooth device.
+     * NB, to stop the thread call myCancel().
      */
     class BluetoothConnection extends AsyncTask<MyBluetoothDevice, String, Void> {
     	MyBluetoothDevice mDevice;
@@ -425,7 +452,7 @@ public class ActBluetooth extends VerticalList.VLActivity {
     	@Override
     	protected void onProgressUpdate(String... values) {
     		if (values[0].equals("xxx")) {
-    			mDevice.SetConnected(true);
+    			mDevice.setConnected(true);
     			Util.toast("Connection Established");
     			fillScreen();   // We need to change the text of just connected device
     		} else {
@@ -445,12 +472,14 @@ public class ActBluetooth extends VerticalList.VLActivity {
     		} else {
     			Util.msg("Bluetooth listener stopped for device " + mDevice.getName());
     		}
-    		mDevice.SetConnected(false);
+    		mDevice.setConnected(false);
     	}
     }
 
-	//***************************************************************************************8
-
+	/*** class DlgBTconnect: ***********************************************************************************
+	 *
+	 * Dialog fragment to determine how user wishes to use the device, and then initiate the connection.
+	 */
 	public static class DlgBTconnect extends DialogFragment {
 //MFK rather than making this robust thru restart, perhaps we can just detect and close?
 		private static DlgBTconnect instance = null;    // only allow one Search instance at a time
@@ -503,27 +532,26 @@ public class ActBluetooth extends VerticalList.VLActivity {
 							mNavSpinner.setVisibility(which == CHOICE_NAVIGATION ? View.VISIBLE : View.GONE);
 							mSpecificTrait.setVisibility(which == CHOICE_SPECIFIC_TRAIT ? View.VISIBLE : View.GONE);
 							mSpecificTraitSpinner.setVisibility(which == CHOICE_SPECIFIC_TRAIT ? View.VISIBLE : View.GONE);
-							// reset both spinners to avoid remembered state
+							// reset both spinners to avoid remembered state:
 							mNavSpinner.setSelection(0);
 							mSpecificTraitSpinner.setSelection(0);
-//							switch (which) {
-//								case CHOICE_NAVIGATION:
-//									break;
-//								case CHOICE_ANY_TRAIT:
-//									break;
-//								case CHOICE_SPECIFIC_TRAIT:
-//									break;
-//							}
 						}
 					});
 
 			// MFK, here and in other places (DlgFilter) we have a prompt and a spinner.
 			// Perhaps make a VerticalList object for this. With visibility set option
-			// Navigation extras:
+			/*
+			 * Navigation extras:
+			 * Note in the attribute list we put at position 0 (default) an option that
+			 * is not an attribute but indicates the barcode field of the Node class.
+			 * We may eventually remove that field, in which case if the user doesn't
+			 * specify an attribute we just search for trait barcode attributes.
+			 * MFK note currently CHOICE_ANY_TRAIT is the same as CHOICE_SPECIFIC_TRAIT
+			 * with not trait selected, may as well remove CHOICE_ANY_TRAIT.
+			 */
 			mNav = mMainView.addTextNormal("Navigation attribute:");
 			mNav.setVisibility(View.GONE);
 			mNavSpinner = mMainView.addSpinner(trl.getAttributes(), " Barcode (default)", null);
-			//mNavSpinner = mMainView.addSpinner(trl.getNodeProperties(), "..Select Attribute..", null);
 			mNavSpinner.setPrompt("coconuts");
 			mNavSpinner.setVisibility(View.GONE);
 			// Specific trait extras:
@@ -556,12 +584,7 @@ public class ActBluetooth extends VerticalList.VLActivity {
 									// get trait
 									if (mNavSpinner.getSelectedItemPosition() > 0) {
 										NodeAttribute att = (NodeAttribute) mNavSpinner.getSelectedItem();
-										Util.msg("trait.name: " + att.name());
 										mDevice.setNavAttribute(att);
-
-//										Trial.NodeProperty att = (Trial.NodeProperty) mNavSpinner.getSelectedItem();
-//										Util.msg("trait.name: " + att.name());
-//										//mDevice.setNavAttribute(att);
 									}
 									break;
 								case CHOICE_ANY_TRAIT:
@@ -570,7 +593,6 @@ public class ActBluetooth extends VerticalList.VLActivity {
 									// get trait
 									if (mSpecificTraitSpinner.getSelectedItemPosition() > 0) {
 										Trait trt = (Trait) mSpecificTraitSpinner.getSelectedItem();
-										Util.msg("trait.name: " + trt.getCaption());
 										mDevice.setTrait(trt);
 									}
 									break;

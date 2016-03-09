@@ -11,12 +11,10 @@ package csiro.fieldprime;
 import org.json.JSONArray;
 import org.json.JSONException;
 
-import csiro.fieldprime.R;
 import csiro.fieldprime.Trial.RepSet;
 import csiro.fieldprime.Trial.TraitInstance;
 import android.database.Cursor;
 import android.view.View;
-import android.view.ViewManager;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
@@ -182,8 +180,8 @@ String mainhtml = "<!DOCTYPE html>\n" +
      
         mBrowser.loadUrl("file:///android_asset/main.html");
 		
-		mButtonBar.ResetButtons(new String []{"Create", "Delete", "Graphs"}, 
-				new int [] {REPSET_CREATE, REPSET_DELETE, REPSET_GRAPHS});
+		mButtonBar.resetButtons(new String[]{"Create", "Delete", "Graphs"},
+				new int[]{REPSET_CREATE, REPSET_DELETE, REPSET_GRAPHS});
 	}
 	void OLD_ListSelect(int index) {
 		RepSet rs = mRepSets[index];
