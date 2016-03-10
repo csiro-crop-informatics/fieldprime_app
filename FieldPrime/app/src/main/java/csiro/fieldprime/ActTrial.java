@@ -6,6 +6,8 @@
  */
 
 package csiro.fieldprime;
+import static csiro.fieldprime.ActBluetooth.*;
+import static csiro.fieldprime.ActBluetooth.Mode.NAVIGATION;
 import static csiro.fieldprime.Util.flog;
 
 import java.util.ArrayList;
@@ -52,7 +54,7 @@ import csiro.fieldprime.Trial.SortType;
 import csiro.fieldprime.Trial.TraitInstance;
 
 public class ActTrial extends Globals.Activity
-	implements CallOut, OnSharedPreferenceChangeListener, ActBluetooth.handlers {
+	implements CallOut, OnSharedPreferenceChangeListener, handlers {
 	
 	// CONSTANTS: ====================================================================================================
 	static public final String ACTSCORING_TRIALNAME = "fieldprime.trialName";
@@ -1728,7 +1730,8 @@ public class ActTrial extends Globals.Activity
 
 	public void handleBluetoothValue(String val, ActBluetooth.MyBluetoothDevice btDev) {
 		if (!TrialOpen()) return;
-		if (btDev.isNavigator()) {
+		switch (btDev.getMode()) {
+			case NAVIGATION:
 			/***
 			 * User has specified this device is used for navigation, which means identifying
 			 * and moving to specific nodes, and possibly to the scoring screen for a specific
@@ -1745,64 +1748,66 @@ public class ActTrial extends Globals.Activity
 			 *
 			 * If that search fails, then we search for a match in the Node barcode field.
 			 */
-			NodeAttribute barcodeAttribute = btDev.getBarcodeAttribute();
-			if (barcodeAttribute != null) {
-				// Note only navigate if unique node matches barcode, perhaps we should offer choice.
-				final ArrayList<Long> nids = mTrial.getMatchingNodes(barcodeAttribute, val);
-				if (nids.size() == 1) {
-					mTrial.gotoNodebyId(nids.get(0));
-					refreshNodeScreen();
-					return;
-				} else if (nids.size() == 0) {
-					Util.msg("No node found with barcode " + val);
-				} else {
-					String[] nodelist = new String[nids.size()];
-					for (int i = 0; i < nids.size(); ++i) {
-						Node node = mTrial.getNodeById(nids.get(i));
-						nodelist[i] = String.format("%s %d %s %d", mTrial.getIndexName(0), node.getRow(),
-								mTrial.getIndexName(1), node.getCol());
-					}
-					DlgList.newInstanceSingle(0, String.format("%d Matching nodes", nodelist.length),
-							nodelist, new DlgList.ListSelectHandler() {
-								@Override
-								public void onListSelect(int context, int which) {
-									Util.msg("which " + which + " nidswhich " + nids.get(which));
-									mTrial.gotoNodebyId(nids.get(which));
-									refreshNodeScreen();
-								}
-							});
-				}
-				return;
-			}
-
-			/*
-			 *  See if any of the scoring traits have a barcode attribute.
-			 *  If so, look up the barcode. NB - First match found is used.
-			 */
-			for (RepSet rs : mScoreSets) {
-				Trait trt = rs.getTrait();
-				NodeAttribute bcAtt = mTrial.getAttribute(trt.getBarcodeAttributeId());
-				if (bcAtt != null) {
-					// look up barcode in this attribute:
-					// MFK note no checks for ambiguous barcodes.
-					ArrayList<Long> nids = mTrial.getMatchingNodes(bcAtt, val);
+				NodeAttribute barcodeAttribute = btDev.getNavAttribute();
+				if (barcodeAttribute != null) {
+					// Note only navigate if unique node matches barcode, perhaps we should offer choice.
+					final ArrayList<Long> nids = mTrial.getMatchingNodes(barcodeAttribute, val);
 					if (nids.size() == 1) {
 						mTrial.gotoNodebyId(nids.get(0));
 						refreshNodeScreen();
-						gotoTraitFirstUnscored(trt, true);
 						return;
+					} else if (nids.size() == 0) {
+						Util.msg("No node found with barcode " + val);
+					} else {
+						String[] nodelist = new String[nids.size()];
+						for (int i = 0; i < nids.size(); ++i) {
+							Node node = mTrial.getNodeById(nids.get(i));
+							nodelist[i] = String.format("%s %d %s %d", mTrial.getIndexName(0), node.getRow(),
+									mTrial.getIndexName(1), node.getCol());
+						}
+						DlgList.newInstanceSingle(0, String.format("%d Matching nodes", nodelist.length),
+								nodelist, new DlgList.ListSelectHandler() {
+									@Override
+									public void onListSelect(int context, int which) {
+										Util.msg("which " + which + " nidswhich " + nids.get(which));
+										mTrial.gotoNodebyId(nids.get(which));
+										refreshNodeScreen();
+									}
+								});
+					}
+					return;
+				}
+
+				/*
+				 *  See if any of the scoring traits have a barcode attribute.
+				 *  If so, look up the barcode. NB - First match found is used.
+				 */
+				for (RepSet rs : mScoreSets) {
+					Trait trt = rs.getTrait();
+					NodeAttribute bcAtt = mTrial.getAttribute(trt.getBarcodeAttributeId());
+					if (bcAtt != null) {
+						// look up barcode in this attribute:
+						// MFK note no checks for ambiguous barcodes.
+						ArrayList<Long> nids = mTrial.getMatchingNodes(bcAtt, val);
+						if (nids.size() == 1) {
+							mTrial.gotoNodebyId(nids.get(0));
+							refreshNodeScreen();
+							gotoTraitFirstUnscored(trt, true);
+							return;
+						}
 					}
 				}
-			}
 
-			/*
-			 * Search using the barcode field in Node:
-			 */
-			if (mTrial.gotoNodeByBarcode(val))
-				refreshNodeScreen();
-			else
-				Util.msg("No node found with barcode " + val);
-		} else {
+				/*
+				 * Search using the barcode field in Node:
+				 */
+				if (mTrial.gotoNodeByBarcode(val))
+					refreshNodeScreen();
+				else
+					Util.msg("No node found with barcode " + val);
+				break;
+
+			case SCORING:
 			/*
 			 * Value is a score.
 			 * If no specific trait is configure for btDev then the value is
@@ -1812,18 +1817,21 @@ public class ActTrial extends Globals.Activity
 			 * TI, then we go to the first unscored ti of that trait in the current
 			 * scoring set (if there is one), and use the score for that.
 			 */
-			if (mDatum != null) {
-				Trait trt = mDatum.GetTrait();
-				Trait devTrait = btDev.getTrait();
-				if (devTrait != null && trt != devTrait && !gotoTraitFirstUnscored(devTrait, false)) {
-					Util.msg("No unscored instance of trait " + devTrait.getCaption() + " in current node");
-					return;
-				}
-				if (!mDatum.processTextValue(val)) {
-					Util.msg("Could not set score");
-				}
-			} else
-				Util.msg("Not currently entering a score");
+				if (mDatum != null) {
+					Trait trt = mDatum.GetTrait();
+					Trait devTrait = btDev.getTrait();
+					if (devTrait != null && trt != devTrait && !gotoTraitFirstUnscored(devTrait, false)) {
+						Util.msg("No unscored instance of trait " + devTrait.getCaption() + " in current node");
+						return;
+					}
+					if (!mDatum.processTextValue(val)) {
+						Util.msg("Could not set score");
+					}
+				} else
+					Util.msg("Not currently entering a score");
+				break;
+			case NONE:
+				break;
 		}
 	}
 

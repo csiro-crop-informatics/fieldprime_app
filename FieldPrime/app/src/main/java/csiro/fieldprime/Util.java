@@ -28,6 +28,7 @@ import android.graphics.Color;
 import android.location.Location;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -397,6 +398,22 @@ public class Util {
 	// Long.compare not available until API 19
 	public static int compare(long a, long b) {
 		return a < b ? -1 : (a > b ? 1 : 0);
+	}
+
+	/*
+	 * removeViewFromParent()
+	 * An occasion problem occurs when we try to add a view as a child to
+	 * something when that view is already a child of something else.
+	 * We get the "view already has a parent" exception.
+	 * Assuming it no longer should be a child of something else, we can
+	 * identify the previous parent and remove the view from it.
+	 * This function does that.
+	 */
+	public static void removeViewFromParent(View view) {
+		if (view == null) return;
+		ViewGroup vg = (ViewGroup)view.getParent();
+		if (vg != null)
+			vg.removeView(view);
 	}
 }
 

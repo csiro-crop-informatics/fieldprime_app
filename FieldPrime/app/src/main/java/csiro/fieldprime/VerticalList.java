@@ -416,6 +416,7 @@ public class VerticalList extends ViewLine {
 			View midView = getMidView();
 			if (midView != null) {
 				mMidViewSV = new ScrollView(this);
+				Util.removeViewFromParent(midView);
 				mMidViewSV.setBackgroundResource(R.color.black); // in case the text view is smaller than scrollview
 				mMidViewSV.addView(midView, new ScrollView.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
 				mTop.addView(mMidViewSV, new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, 0, 0.5f));
