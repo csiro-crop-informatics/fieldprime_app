@@ -18,8 +18,6 @@
  * ToDo
  * Save MyBluetoothDevices against hardware device ids, remake open connections
  * after trial/app close and reopen.
- * Add disconnect option - should be able to keep configuration when disconnected?
- * Yes I think so. Either when device disconnects or user initiated.
  * Maybe timer to keep trying to connect?
  */
 
@@ -61,11 +59,17 @@ import static csiro.fieldprime.ActBluetooth.Mode.*;
 
 public class ActBluetooth extends VerticalList.VLActivity {
 	public enum Mode { NONE, NAVIGATION, SCORING }
+	public enum Cstate {UNCONNECTED, CONNECTING, CONNECTED }
     interface handlers {
 		void handleBluetoothValue(String value, MyBluetoothDevice btDev);
     }
+	static private final String SCAN_LABEL = "Scan";
+	static private final String CONNECT_LABEL = "Connect";
+	static private final String DISCONNECT_LABEL = "Disconnect";
+	static private final String CONFIG_LABEL = "Configure";
 	static private final int SCAN = 1;
 	static private final int CONNECT_TOGGLE = 2;
+	static private final int CONFIGURE = 3;
 	static private final byte  mMTEnd[] = new byte[] {27,101,110,116,101,114,46};   // bytes at end of Mettler Toledo scale send
 
 	private BluetoothAdapter mBluetoothAdapter = null;
@@ -73,7 +77,120 @@ public class ActBluetooth extends VerticalList.VLActivity {
 	private TextView mText;
 	private ButtonBar mButtonBar;
 	private Button mConnectButton;
+	private Button mConfigButton;
 
+	// Bluetooth on/off, not used yet.
+    private void onBluetooth() {
+        if (!mBluetoothAdapter.isEnabled())
+            mBluetoothAdapter.enable();
+    }
+    private void offBluetooth() {
+        if (mBluetoothAdapter.isEnabled())
+            mBluetoothAdapter.disable();
+    }
+
+	private void getPairedDevices() {
+		Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
+		if (pairedDevices.size() > 0) {
+			for (BluetoothDevice device : pairedDevices) {
+				boolean present = false;
+				for (MyBluetoothDevice d : mDeviceList) {
+					if (d.device().equals(device)) {
+						present = true;
+						break;
+					}
+				}
+				if (!present)
+					mDeviceList.add(new MyBluetoothDevice(device));
+			}
+		}
+	}
+
+	private void scan() {
+		Toast.makeText(getBaseContext(),
+				"Searching for devices, make sure your device is discoverable", Toast.LENGTH_SHORT).show();
+		BroadcastReceiver myReceiver = new BroadcastReceiver() {
+			@Override
+			public void onReceive(Context context, Intent intent) {
+				String action = intent.getAction();
+				if (BluetoothDevice.ACTION_FOUND.equals(action)){
+					BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+					// Check not already in list
+					for (MyBluetoothDevice d : mDeviceList) {
+						if (device.getAddress().equals(d.device().getAddress()))
+							return;
+					}
+					mDeviceList.add(new MyBluetoothDevice(device));
+					//FillScreen();  wait till discovery finished?
+				} else if (action.equals(BluetoothAdapter.ACTION_DISCOVERY_FINISHED)) {
+					Util.toast("Discovery finished");
+					ActBluetooth.this.unregisterReceiver(this);
+					fillScreen();
+				}
+			}
+		};
+		IntentFilter intentFilter = new IntentFilter();
+		intentFilter.addAction(BluetoothDevice.ACTION_FOUND);
+		intentFilter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
+		ActBluetooth.this.registerReceiver(myReceiver, intentFilter);
+		mBluetoothAdapter.startDiscovery();
+	}
+
+	private boolean isPrinter(BluetoothDevice btd) {
+		return (btd.getBluetoothClass().getDeviceClass() == 1664);
+	}
+
+	private void updateButtonsAndDetails() {
+		mButtonBar.removeAll();
+		mButtonBar.addButton(SCAN_LABEL, SCAN);
+		if (mDeviceList == null) return;  // shouldn't happen
+		if (mCurrSelection < 0) return;
+		MyBluetoothDevice dev = mDeviceList.get(mCurrSelection);
+		if (dev == null) return;
+
+		// If there's a device selected, show config button:
+		mConfigButton = mButtonBar.addButton(CONFIG_LABEL, CONFIGURE);
+		// If' it has configuration, show (dis)connect):
+		if (dev.getMode() != Mode.NONE)
+			mConnectButton = mButtonBar.addButton(dev.connectState() == Cstate.CONNECTED ? DISCONNECT_LABEL : CONNECT_LABEL,
+					CONNECT_TOGGLE);
+
+		mText.setText(dev.details());
+	}
+
+	private handlers getHandler() {
+		Activity curr = g.getCurrentActivity();
+		if (curr instanceof handlers)
+			return (handlers)curr;
+		else
+			return null;
+	}
+
+	View.OnClickListener buttonHandler = new View.OnClickListener() {
+		@Override
+		public void onClick(View v) {
+			switch (v.getId()) {
+				case SCAN:
+					scan();   // MFK how about disabling stuff while scanning?
+					break;
+				case CONNECT_TOGGLE:
+					// may be connect or disconnect, check isConnected() (which should be kept accurate in all cases)
+					if (mCurrSelection < 0) break;
+					MyBluetoothDevice dev = mDeviceList.get(mCurrSelection);
+					if (dev.connectState() == Cstate.UNCONNECTED)
+						dev.asyncRunDevice();
+					else
+						dev.disconnect();
+					updateButtonsAndDetails();
+					break;
+				case CONFIGURE:
+					mDeviceList.get(mCurrSelection).configure();
+					break;
+			}
+		}
+	};
+
+	/*** VerticalList Overrides: ***************************************************************************/
 
 	@Override
 	public void refreshData() {
@@ -97,45 +214,7 @@ public class ActBluetooth extends VerticalList.VLActivity {
 	Object[] objectArray() {
 		return mDeviceList.toArray();
 	}
-	
-	// Bluetooth on/off, not used yet.
-    private void onBluetooth() {
-        if (!mBluetoothAdapter.isEnabled())
-            mBluetoothAdapter.enable();
-    }
-    private void offBluetooth() {
-        if (mBluetoothAdapter.isEnabled())
-            mBluetoothAdapter.disable();
-    }
-    
 
-	private void getPairedDevices() {
-		//mDeviceAdapter.clear();
-		//mDeviceList = new ArrayList<MyBluetoothDevice>();
-		// Clear all devices that aren't connected:
-
-//		Iterator<MyBluetoothDevice> iter = mDeviceList.iterator();
-//		while (iter.hasNext()) {
-//		    if (!iter.next().connected()) {
-//		        iter.remove();
-//		    }
-//		}
-
-		Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
-		if (pairedDevices.size() > 0) {
-			for (BluetoothDevice device : pairedDevices) {
-				boolean present = false;
-				for (MyBluetoothDevice d : mDeviceList) {
-					if (d.device().equals(device)) {
-						present = true;
-						break;
-					}
-				}
-				if (!present)
-					mDeviceList.add(new MyBluetoothDevice(device));
-			}
-		}
-	}
 
 	@Override
 	String heading() {
@@ -144,9 +223,7 @@ public class ActBluetooth extends VerticalList.VLActivity {
 
 	@Override
 	void listSelect(int index) {
-		MyBluetoothDevice md = mDeviceList.get(index);
-		updateConnectButton();
-		mText.setText(md.details());
+		updateButtonsAndDetails();
 	}
 		
 	@Override
@@ -155,91 +232,18 @@ public class ActBluetooth extends VerticalList.VLActivity {
 			mText = super.makeTextView();
 		return mText; 
 	}
-	
-    private void scan() {
-		Toast.makeText(getBaseContext(),
-				"Searching for devices, make sure your device is discoverable", Toast.LENGTH_SHORT).show();
-		BroadcastReceiver myReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                String action = intent.getAction();
-                if (BluetoothDevice.ACTION_FOUND.equals(action)){
-                    BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                    // Check not already in list
-                    for (MyBluetoothDevice d : mDeviceList) {
-						if (device.getAddress().equals(d.device().getAddress()))
-							return;
-					}
-					mDeviceList.add(new MyBluetoothDevice(device));
-					//FillScreen();  wait till discovery finished?
-                } else if (action.equals(BluetoothAdapter.ACTION_DISCOVERY_FINISHED)) {
-                	Util.toast("Discovery finished");
-                    ActBluetooth.this.unregisterReceiver(this);
-                    fillScreen();
-                }
-            }
-        };
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(BluetoothDevice.ACTION_FOUND);
-        intentFilter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
-        ActBluetooth.this.registerReceiver(myReceiver, intentFilter);
-        mBluetoothAdapter.startDiscovery();
-    }
-
-	private boolean isPrinter(BluetoothDevice btd) {
-		return (btd.getBluetoothClass().getDeviceClass() == 1664);
-	}
-
-	private void updateConnectButton() {
-		if (mDeviceList == null) return;
-		MyBluetoothDevice dev = mDeviceList.get(mCurrSelection);
-		if (dev == null) return;
-		String label = dev.connected() ? "Disconnect" : "Connect";
-		if (mConnectButton == null)
-			mConnectButton = mButtonBar.addButton(label, CONNECT_TOGGLE);
-		else
-			mConnectButton.setText(label);
-	}
 
 	@Override
 	View getBottomView() {
-		if (mButtonBar == null) {
-			mButtonBar = new ButtonBar(this, new View.OnClickListener() {
-				@Override
-				public void onClick(View v) {
-					switch (v.getId()) {
-						case SCAN:
-							scan();   // MFK how about disabling stuff while scanning?
-							break;
-						case CONNECT_TOGGLE:
-							// may be connect or disconnect, check isConnected() (which should be kept accurate in all cases)
-							if (mCurrSelection < 0) break;
-							MyBluetoothDevice dev = mDeviceList.get(mCurrSelection);
-							if (!dev.connected())
-								dev.connect();
-							else
-								dev.disconnect();
-							updateConnectButton();
-							break;
-					}
-				}
-			});
-
-			mButtonBar.addButton("scan", SCAN); // NB - Connect button now added and managed in listSelect
-		}
+		if (mButtonBar == null)
+			mButtonBar = new ButtonBar(this, buttonHandler);
+		updateButtonsAndDetails();
 		return mButtonBar.Layout();
 	}
 	
 	@Override
 	void hideKeyboard() {}
 
-	private handlers getHandler() {
-		Activity curr = g.getCurrentActivity();
-		if (curr instanceof handlers)
-			return (handlers)curr;
-		else
-			return null;
-	}
 
 	/*** class MyBluetoothDevice: ************************************************************************************
      *
@@ -249,13 +253,13 @@ public class ActBluetooth extends VerticalList.VLActivity {
      * device should only be used for the specified trait.
      * If isNavigator() then values from this device should be interpreted as plot barcodes.
      */
-    class MyBluetoothDevice{
+    class MyBluetoothDevice {
       	private BluetoothDevice mDevice;
 		private Mode mMode = NONE;
       	//private boolean mNavigator = true;
 		private Trial.NodeAttribute mNavAttribute;
       	private Trait mTrait;
-      	private boolean mConnected;
+      	private Cstate mConnected = Cstate.UNCONNECTED;
 		private BluetoothConnection mBtConnection;
       	
       	MyBluetoothDevice(BluetoothDevice btd) {
@@ -275,15 +279,21 @@ public class ActBluetooth extends VerticalList.VLActivity {
     			bondState = "Paired";
     			break;
     		}
-    		String config;
-    		if (!mConnected) {
-    			config = "Not connected";
-    		} else {
-    			config = "Connected";
-    			if (getMode() == NAVIGATION) config += " for navigation";
-    			else if (mTrait == null) config += " for scoring any trait";
-    			else config += " for scoring trait " + mTrait.getCaption();
-    		}
+    		String config = mConnected.toString();
+			switch (mConnected) {
+				case UNCONNECTED:
+					config = "Not connected";
+					break;
+				case CONNECTING:
+					config = "Trying to connect";
+					break;
+				case CONNECTED:
+					config = "Connected";
+					if (getMode() == NAVIGATION) config += " for navigation";
+					else if (mTrait == null) config += " for scoring any trait";
+					else config += " for scoring trait " + mTrait.getCaption();
+					break;
+			}
     		return mDevice.getName() + "\n" + mDevice.getAddress() + " " + bondState + " " + config;
     	}
     	public BluetoothDevice device() { return mDevice; }
@@ -311,14 +321,36 @@ public class ActBluetooth extends VerticalList.VLActivity {
 			return getMode() == NAVIGATION ? mNavAttribute : null;
 		}
 
-    	public void setConnected(boolean connected) { mConnected = connected; }
-    	public boolean connected() { return mConnected; }
-
-		public CharSequence details() {
-			return toString();
+    	public void setConnected(boolean connected) {
+			mConnected = connected ? Cstate.CONNECTED : Cstate.UNCONNECTED;
+		}
+    	public Cstate connectState() {
+			return mConnected;
 		}
 
-		private void connect() {
+		public CharSequence details() {
+			String details = toString();
+			switch (mMode) {
+				case NONE:
+					break;
+				case NAVIGATION:
+					details += "\nUse for navigation";
+					NodeAttribute natt = getNavAttribute();
+					if (natt != null)
+						details += " using attribute " + natt.name();
+					break;
+				case SCORING:
+					details += "\nUse for scoring";
+					Trait trt = getTrait();
+					if (trt != null)
+						details += " using trait " + trt.getCaption();
+					break;
+			}
+
+			return details;
+		}
+
+		private void configure() {
 			if (isPrinter(device())) {
 				device().getAddress();
 				// Get and remember the mac address, have to get this back to the scoring activity
@@ -336,21 +368,27 @@ public class ActBluetooth extends VerticalList.VLActivity {
 		}
 
 		public void asyncRunDevice() {
-			Util.toast("Trying to connect to " + mDevice.getName());
-			if (connected()) {
-				Util.toast("Already connected to " + mDevice.getName());
-			} else {
-				mBtConnection = new BluetoothConnection();
-				/*
-				 * MFK This use of mActTrial should be replaced, since in some circumstances
-				 * mActTrial will be null.
-				 */
-				ActTrial.mActTrial.addBluetoothConnection(mBtConnection);
-				/*
-				 * NB we may have multiple bluetooths working so we need them to be able to
-				 * multitask - hence the call to executeOnExecutor() rather than just execute().
-				 */
-				mBtConnection.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, new MyBluetoothDevice[]{this});
+			switch (connectState()) {
+				case UNCONNECTED:
+					Util.toast("Trying to connect to " + mDevice.getName());
+					mBtConnection = new BluetoothConnection();
+					/*
+					 * MFK This use of mActTrial should be replaced, since in some circumstances
+					 * mActTrial will be null.
+					 */
+						ActTrial.mActTrial.addBluetoothConnection(mBtConnection);
+					/*
+					 * NB we may have multiple bluetooths working so we need them to be able to
+					 * multitask - hence the call to executeOnExecutor() rather than just execute().
+					 */
+					mBtConnection.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, new MyBluetoothDevice[]{this});
+					break;
+				case CONNECTING:
+					Util.toast("Already trying to connect to " + mDevice.getName());
+					break;
+				case CONNECTED:
+					Util.toast("Already connected to " + mDevice.getName());
+					break;
 			}
 		}
 	}
@@ -441,6 +479,7 @@ public class ActBluetooth extends VerticalList.VLActivity {
     	protected void onProgressUpdate(String... values) {
     		if (values[0].equals("xxx")) {
     			mDevice.setConnected(true);
+				updateButtonsAndDetails();
     			Util.toast("Connection Established");
     			fillScreen();   // We need to change the text of just connected device
     		} else {
@@ -492,9 +531,6 @@ public class ActBluetooth extends VerticalList.VLActivity {
 			instance.show(Globals.FragMan(), "dlgBTconnect");
 		}
 
-//		void setVisibility() {
-//
-//		}
 		@Override
 		public Dialog onCreateDialog(Bundle savedInstanceState) {
 			Trial trl = ((Globals)getActivity().getApplication()).currTrial();
@@ -520,9 +556,6 @@ public class ActBluetooth extends VerticalList.VLActivity {
 							mNavSpinner.setVisibility(which == CHOICE_NAVIGATION ? View.VISIBLE : View.GONE);
 							mTraitPrompt.setVisibility(which == CHOICE_SCORING ? View.VISIBLE : View.GONE);
 							mTraitSpinner.setVisibility(which == CHOICE_SCORING ? View.VISIBLE : View.GONE);
-							// reset both spinners to avoid remembered state:
-//							mNavSpinner.setSelection(0);
-//							mTraitSpinner.setSelection(0);
 						}
 					});
 
@@ -567,7 +600,7 @@ public class ActBluetooth extends VerticalList.VLActivity {
 			}
 
 			final AlertDialog dlg = (new AlertDialog.Builder(getActivity())) // the final lets us refer to dlg in the handlers..
-					.setTitle("Connect")
+					.setTitle("Configure")
 					.setMessage("Choose how you wish to use this device.")
 					.setView(mMainView)
 					.setPositiveButton("Apply", null)  // listener to pos button installed below
@@ -604,13 +637,12 @@ public class ActBluetooth extends VerticalList.VLActivity {
 									mDevice.setMode(Mode.NONE);
 									break;
 							}
-							mDevice.asyncRunDevice();
+							((ActBluetooth)getActivity()).updateButtonsAndDetails();
 							dlg.dismiss();
 						}
 					});
 				}
 			});
-
 			return dlg;
 		}
 	}

@@ -87,6 +87,16 @@ public class ButtonBar {  // MFK should extend LinearLayout no?  but we have to 
 			addButton(captions[i], ids[i]);
 	}
 
+	public void removeButton(Button butt) {
+		mButtonBar.removeView(butt);
+		mNumButtons = mButtonBar.getChildCount();
+		mButtonBar.setWeightSum(mNumButtons);
+	}
+	public void removeAll() {
+		mButtonBar.removeAllViews();
+		mNumButtons = 0;
+		mButtonBar.setWeightSum(mNumButtons);
+	}
 	public LinearLayout Layout() {
 		return mButtonBar;
 	}
