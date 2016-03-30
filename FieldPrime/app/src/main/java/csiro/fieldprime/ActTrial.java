@@ -1417,6 +1417,10 @@ public class ActTrial extends Globals.Activity
 			closeTrial();
 			break;
 		case R.id.selectTraits:
+			if (mTrial.getNumNodes() <= 0) {
+				Util.msg("You cannot select score traits when there are no nodes");
+				break;
+			}
 			DlgChooseScoreSets.newInstance(new DlgChooseScoreSets.handler() {
 				@Override
 				public void onListSelect(ArrayList<RepSet> scoreSets) {
