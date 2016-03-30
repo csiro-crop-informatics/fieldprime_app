@@ -126,11 +126,13 @@ public class DlgFilter extends DialogFragment {
 						// Get value if there:
 						if (mAttValue != null) {
 							Object attValObj = mAttValue.getSelectedItem();
-							if (attValObj != null)
+							if (attValObj != null) {
 								attSearchTxt = attValObj.toString();
+								((ActTrial) getActivity()).setFilter(searchAtt, attSearchTxt);
+							}
 						}
 						
-						((ActTrial)getActivity()).setFilter(searchAtt, attSearchTxt);
+
 						dlg.dismiss();
 					}
 				});

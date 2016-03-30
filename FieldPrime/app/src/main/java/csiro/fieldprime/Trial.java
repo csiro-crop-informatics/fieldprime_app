@@ -170,7 +170,7 @@ public class Trial {
 
 		// Get trial ready for use.
 		trl.initScoreSetList();
-		trl.setNodeIndex(0);
+		trl.resetNodeIndex();
 
 		return new Result(trl);
 	}
@@ -711,10 +711,17 @@ public class Trial {
 	public int getNodeIndex() {
 		return mNodeIndex;
 	}
-	
 
 	private void setNodeIndex(int index) {
 		this.mNodeIndex = index;
+	}
+
+	/**
+	 * resetNodeIndex()
+	 * Set current position to zero, if any nodes, else -1.
+	 */
+	private void resetNodeIndex() {
+		setNodeIndex(mNodeList.size() > 0 ? 0 : -1);
 	}
 
 	/*
@@ -1007,7 +1014,7 @@ public class Trial {
 			pstate.setFilter(att, attval);
 			applyFilter(pstate);
 		}
-		setNodeIndex(0);
+		resetNodeIndex();
 		pstate.sortList(null, this);
 	}
 
@@ -1046,7 +1053,7 @@ public class Trial {
 		} else {
 			// Filters on:
 			mNodeList = newNodeList;
-			setNodeIndex(0);
+			resetNodeIndex();
 			Util.toast("Filtering on attribute " + nat.name() + " = " + attvalue + "\n"
 					+ count + " nodes in set");
 		}
@@ -1307,7 +1314,7 @@ public class Trial {
 	}
 	public void sortNodes(SortType ordering, boolean reverse) {
 		Collections.sort(mNodeList, new NodeComparator(ordering, reverse));
-		setNodeIndex(0); // after sorting, start at first
+		resetNodeIndex(); // after sorting, start at first
 	}
 	
 	
@@ -1316,12 +1323,12 @@ public class Trial {
 //		if (att.datatype() != T_INTEGER)
 //			return;  // Do nothing if not integer type
 //		Collections.sort(mNodeList, new NodeAttributeComparator(att, reverse));
-//		setNodeIndex(0); // after sorting, start at first
+//		resetNodeIndex(); // after sorting, start at first
 //	}
 
 	public void sortNodes(NodeAttribute a1, SortDirection d1, NodeAttribute a2, SortDirection d2) {
 		Collections.sort(mNodeList, new NodeAttributeComparator2(a1, d1, a2, d2));
-		setNodeIndex(0); // after sorting, start at first
+		resetNodeIndex(); // after sorting, start at first
 	}
 	
 	//##################################################################################################
@@ -1417,7 +1424,7 @@ public class Trial {
 			newlist.add(ast.node);
 		}
 		mNodeList = newlist;
-		setNodeIndex(0); // after sorting, start at first
+		resetNodeIndex(); // after sorting, start at first
 		return new Result();
 	}
 	//##################################################################################################
@@ -1460,7 +1467,7 @@ public class Trial {
 //		if (att1.datatype() != T_INTEGER || att2.datatype() != T_INTEGER)
 //			return;  // Do nothing if not integer type
 //		Collections.sort(mNodeList, new NodeAttributeComparator(att, reverse));
-//		setNodeIndex(0); // after sorting, start at first
+//		resetNodeIndex(); // after sorting, start at first
 //	}
 	
 	/*** END SORT STUFF **************************************************************************/

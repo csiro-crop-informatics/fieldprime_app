@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="csiro.fieldprime"
     android:versionCode="512"
-    android:versionName="FieldPrime v1.1.5 - March 22 2016 " >
+    android:versionName="FieldPrime v1.1.6 - February 3 2016 " >
 
     <uses-sdk
         android:minSdkVersion="17"

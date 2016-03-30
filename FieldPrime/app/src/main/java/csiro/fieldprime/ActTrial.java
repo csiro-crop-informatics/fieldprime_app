@@ -182,7 +182,7 @@ public class ActTrial extends Globals.Activity
 		VerticalList topLL = setupScreen();
 		if (isRestart) 
 			myRestoreInstanceState(savedInstanceState);
-		mViewPager.setCurrentItem(1);
+
  		setContentView(topLL);
  		//Util.memoryStats(); // Show some memory stats
 	}
@@ -705,15 +705,17 @@ public class ActTrial extends Globals.Activity
 	 */
 	//private void refreshNodeScreen() {
 	public void refreshNodeScreen() {
-		{
-			Node n = mTrial.getCurrNode();
-			if (n.isLocal()) {
-				Util.toast("local node");
-				// Display attribute nodes in traitSelector
-				// have to get the traitInstances and add them
-			} else {
-				// Remove attribute nodes in traitSelector
-			}
+		Node n = mTrial.getCurrNode();
+		if (n == null) {
+			// we need to disable next, prev, widgets... Everything but +node
+			return;
+		}
+		if (n.isLocal()) {
+			Util.toast("local node");
+			// Display attribute nodes in traitSelector
+			// have to get the traitInstances and add them
+		} else {
+			// Remove attribute nodes in traitSelector
 		}
 		
 		resetNodeScreenDetails(); // Refresh the displayed node attributes, MFK, don't need to if tu not changed
@@ -1025,7 +1027,13 @@ public class ActTrial extends Globals.Activity
 				genericEventHandler(v.getId());
 			}
 		});
-		
+
+		/***
+		 * If the trial has no nodes, then we need to not display, or disable many
+		 * of the screen items.
+		 */
+		final boolean emptyTrial = mTrial.getNumNodes() <= 0;
+
 		Util.setBackgroundBlack(mTopLL);//SetLayoutBackgroundBlack(mTopLL);
  		setContentView(mTopLL); // Switch to scoring layout.
 		
@@ -1037,60 +1045,42 @@ public class ActTrial extends Globals.Activity
 		 * NB. When Next or Prev is clicked we may need to inform the current Datum that we are
 		 * navigating away. And if the datum has a problem with that, we warn don't navigate away.
 		 */
- 		if (true) {
-			ViewLine pnll = new ViewLine(this, false,  new View.OnClickListener() {
-				@Override
-				public void onClick(View v) {
-					// Assuming here that click is Next or Prev, in which case we may
-					// need to inform the current Datum that we are navigating away.
-					// And if the datum has a problem with that, we warn don't navigate away.
-					if (mDatum != null)
-						mDatum.navigatingAwayWithWarning();
-					switch (v.getId()) {
-					case R.id.next:
-						Next();
-						break;
-					case R.id.prev:
-						Prev();
-						break;
-					default:
-						Util.msg("Unexpected view code for mTopLL");
-					}
+		ViewLine pnll = new ViewLine(this, false,  new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				// Assuming here that click is Next or Prev, in which case we may
+				// need to inform the current Datum that we are navigating away.
+				// And if the datum has a problem with that, we warn don't navigate away.
+				if (mDatum != null)
+					mDatum.navigatingAwayWithWarning();
+				switch (v.getId()) {
+				case R.id.next:
+					Next();
+					break;
+				case R.id.prev:
+					Prev();
+					break;
+				default:
+					Util.msg("Unexpected view code for mTopLL");
 				}
-			}, Globals.SIZE_BIG, false);
-			pnll.setBackgroundResource(R.color.silver);
-			pnll.AddButton("Prev", R.id.prev, false);
-			pnll.AddButton("Next", R.id.next, false);
-			mTopLL.addView(pnll);
-		} else {
- 			ViewLine pnll = new ViewLine(this, Globals.SIZE_BIG);
- 			pnll.setBackgroundResource(R.color.silver);
-			pnll.addButton("Prev", new View.OnClickListener() {
- 				@Override
- 				public void onClick(View v) {
- 					if (mDatum != null)
- 						mDatum.navigatingAwayWithWarning();
- 					Prev();
- 				}
- 			});
- 			pnll.addButton("Next", new View.OnClickListener() {
- 				@Override
- 				public void onClick(View v) {
- 					if (mDatum != null)
- 						mDatum.navigatingAwayWithWarning();
- 					Next();
- 				}
- 			});
- 			mTopLL.addView(pnll);
- 		}
+			}
+		}, Globals.SIZE_BIG, false);
+		pnll.setBackgroundResource(R.color.silver);
+		Button prev = pnll.AddButton("Prev", R.id.prev, false);
+		Button next = pnll.AddButton("Next", R.id.next, false);
+		if (emptyTrial) {
+			prev.setEnabled(false);
+			next.setEnabled(false);
+		}
+		mTopLL.addView(pnll);
 
 
 		// Row, Col, AddNode, Notes row: -------------------------------------------------------------------
  		ViewLine rcBar = new ViewLine(this, true);
 		mPopupAnchor = rcBar; // popup has to hang off something, and there might be no properties, the hline?
 		rcBar.setWeightSum(4f);
-		if (mTrial.mShowRowCol) {
-			// NB, the values here are overwritten by the call to refreshNodeScreen, but we do need to create these..
+		if (mTrial.mShowRowCol && !emptyTrial) {
+			// NB, we don't write values here as they are overwritten by the call to refreshNodeScreen, but we do need to create these.
 			// NB - will perhaps crash if mShowRowCol not true
 
 			/**
@@ -1107,10 +1097,6 @@ public class ActTrial extends Globals.Activity
 			 */
 			mNodePropValue1 = rcBar.addTextView(null, 2);
 			mNodePropValue2 = rcBar.addTextView(null, 2);
-//			mNodePropPrompt1 = rcBar.addTextView(mTrial.getIndexName(0), 1);
-//			mNodePropValue1 = rcBar.addTextView(null, 1);
-//			mNodePropPrompt2 = rcBar.addTextView(mTrial.getIndexName(1), 1);
-//			mNodePropValue2 = rcBar.addTextView(null, 1);
 			View.OnClickListener dry = new View.OnClickListener() {
 				@Override
 				public void onClick(View arg0) {
@@ -1149,43 +1135,6 @@ public class ActTrial extends Globals.Activity
 			};
 			mNodePropValue1.setOnClickListener(dry);
 			mNodePropValue2.setOnClickListener(dry);
-
-// Old code: I first used a spinner rather than a popup, and in this case needed the following in resetNodeScreenDetails()
-            // use stored adapter or perhaps check if changed before doing this to save time?
-			//mNodeProp1SpinPos = ((ArrayAdapter)mNodePropSpin1.getAdapter()).getPosition(node.getRow());
-			//mNodePropSpin1.setSelection(mNodeProp1SpinPos);
-
-// And here is the spinner version. Delete me when happy, (and this is in svn)
-//			mNodePropPrompt1 = rcBar.addTextView(mTrial.getIndexName(0), 1);
-//
-//			/*
-//			 * Get the list of rows:
-//			 */
-//			NodeProperty np1 = mTrial.getFixedNodeProperty(Trial.FIELD_ROW);
-//			final ArrayList<Integer> mItems = (ArrayList<Integer>) np1.getDistinctValues();
-//			mNodePropSpin1 = rcBar.addSpinner(mItems, null, null);
-//
-//			/*
-//			 * Handler for row/col spinner selection:
-//			 */
-//			mNodePropSpin1.setOnItemSelectedListener(new OnItemSelectedListener() {
-//				@Override
-//				public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
-//					// First check if the selected value is valid when paired with the other index:
-//					Node nd = mTrial.getCurrNode();
-//					int row = mItems.get(position);
-//					Node nn = mTrial.getNodeByRowCol(row, nd.getCol());
-//					if (nn == null) {
-//						Util.msg("No matching node");
-//						// NB the spinner is still changed at this point, but refreshNodeScreen will set it back
-//					} else
-//						mTrial.gotoNodebyId(nn.getId());
-//					refreshNodeScreen();
-//				}
-//				@Override
-//				public void onNothingSelected(AdapterView<?> parentView) {}
-//			});
-
 		}
 
 		// If node creation enabled, add button to create node:
@@ -1201,20 +1150,25 @@ public class ActTrial extends Globals.Activity
 						}
 						Node n = (Node)res.obj();
 						mTrial.gotoNodebyId(n.getId());
-						refreshNodeScreen();
+						if (emptyTrial)
+							setupScreen();
+						else
+							refreshNodeScreen();
 				}
 			});
 			Util.setColoursBlackOnWhite(addNodeButton);
 		}		
 		
 		// Notes button:
-		Button notesButton = rcBar.addButton("Notes", new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				startActivityForResult(new Intent(ActTrial.this, ActTUNotes.class), ARC_NOTES_ACTIVITY);
-			}
-		});
-		Util.setColoursBlackOnWhite(notesButton);
+		if (!emptyTrial) {
+			Button notesButton = rcBar.addButton("Notes", new View.OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					startActivityForResult(new Intent(ActTrial.this, ActTUNotes.class), ARC_NOTES_ACTIVITY);
+				}
+			});
+			Util.setColoursBlackOnWhite(notesButton);
+		}
 		
 		// Handle reps:
 //		mRepsPresent = mTrial.AttributePresent(Trial.REP_ATTRIBUTE_NAME);
@@ -1240,9 +1194,11 @@ public class ActTrial extends Globals.Activity
 		mTopLL.addView(rcBar);
 	
 		// Node Property display widgets: --------------------------------------------------------------
-		for (PropertyWidget aw : mPropertyWidgets) {
-			mTopLL.addView(new Hline(this));
-			mTopLL.addView(aw);
+		if (!emptyTrial) {
+			for (PropertyWidget aw : mPropertyWidgets) {
+				mTopLL.addView(new Hline(this));
+				mTopLL.addView(aw);
+			}
 		}
 		
 		mTopLL.addView(new Hline(this, R.color.red));  // Mark end of navigation/info area with red line
@@ -1366,7 +1322,8 @@ public class ActTrial extends Globals.Activity
 		};
 		mViewPager.setAdapter(pa);
 		mTopLL.addView(mViewPager);
-		
+		mViewPager.setCurrentItem(1);
+
 		refreshNodeScreen();
 		return mTopLL;
 	}
