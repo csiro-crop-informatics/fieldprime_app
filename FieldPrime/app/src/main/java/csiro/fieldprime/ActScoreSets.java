@@ -38,11 +38,11 @@ public class ActScoreSets extends VerticalList.VLActivity {
 	private static final boolean webway = false;
 	private boolean mDirty = false;
 	
-	RepSet [] mRepSets;
-	TextView mStats;
-	WebView mBrowser;
-	Button mGraphButton;
-	ButtonBar mButtonBar;
+	private RepSet [] mRepSets;
+	private TextView mStats;
+	private WebView mBrowser;
+	private Button mGraphButton;
+	private ButtonBar mButtonBar;
 	
 	@Override
 	Object[] objectArray() {
