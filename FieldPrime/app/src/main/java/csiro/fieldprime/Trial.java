@@ -2172,12 +2172,14 @@ public class Trial {
 					}
 					// Get ids for the created nodes:
 					JSONObject responseObj = (JSONObject)mRes.obj();
-					if (!responseObj.has("nodeIds")) {
+					if (!responseObj.has("nodeIds") || !responseObj.has("nodeRows") || !responseObj.has("nodeCols")) {
 						mNodesError = "Error in response: no nodeIds element";
 						return false;						
 					}
-					try {
-						JSONArray jnodemap = responseObj.getJSONArray("nodeIds");	
+					try { // better to have single array of node objects
+						JSONArray jnodemap = responseObj.getJSONArray("nodeIds");
+						JSONArray jNewRows = responseObj.getJSONArray("nodeRows");
+						JSONArray jNewCols = responseObj.getJSONArray("nodeCols");
 						if (jnodemap.length() != trial.getNumLocalNodes()) {
 							mNodesError = "Error in response: Wrong number of nodes returned";
 							return false;						
@@ -2196,7 +2198,7 @@ public class Trial {
 						for (int i = jnodemap.length() - 1; i >= 0; i--) {
 							int localId = locNodes.getInt(i);
 							Node n = trial.getNodeById(localId);
-							if (!n.convertLocal2ServerNode(jnodemap.getInt(i))) {
+							if (!n.convertLocal2ServerNode(jnodemap.getInt(i)), jNewRows.getInt(i), jNewCols.getInt(i)) {
 								mNodesError = "Error converting local node";
 								return false;
 							}
@@ -2847,13 +2849,15 @@ public class Trial {
 		 * convertLocal2ServerNode()
 		 * If this node is local, change it to a server node, with the given server id.
 		 */
-		private boolean convertLocal2ServerNode(int id) {
+		private boolean convertLocal2ServerNode(int id, int row, int col) {
 			if (!isLocal()) return false;
 			mLocal = 0;
 			// Update the db - we can't just use updateDB() as that won't work for updating the id.
 			// Remember current id as we need it to identify the node in the db to be updated:
 			long currentId = mId;
 			mId = id;
+			mRow = row;
+			mCol = col;
 			ContentValues values = new ContentValues();
 			values.put(ND_ID, mId);
 			values.put(ND_LOCAL, mLocal);
