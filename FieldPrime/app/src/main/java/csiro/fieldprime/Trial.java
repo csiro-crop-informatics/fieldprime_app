@@ -1004,7 +1004,7 @@ public class Trial {
 	 * This needed (rather than doing this from ActTrial), because of the need to touch
 	 * a bunch of private Trial stuff.
 	 */
-	public void setFilter(NodeAttribute att, String attval) {
+	public void setFilter(NodeProperty att, String attval) {
 		pstate.setFilter(att, attval);
 		if (att == null) {
 			mNodeList = mFullNodeList;// NB Here is the only place an existing filter is removed
@@ -1028,7 +1028,7 @@ public class Trial {
 			Util.toast("No filter specified");
 			return;
 		}
-		NodeAttribute nat = ps.getFilterAttribute();
+		NodeProperty nat = ps.getFilterAttribute();
 		String attvalue = ps.getFilterAttValue();
 		if (nat == null || attvalue == null) return;
 
@@ -2198,7 +2198,7 @@ public class Trial {
 						for (int i = jnodemap.length() - 1; i >= 0; i--) {
 							int localId = locNodes.getInt(i);
 							Node n = trial.getNodeById(localId);
-							if (!n.convertLocal2ServerNode(jnodemap.getInt(i)), jNewRows.getInt(i), jNewCols.getInt(i)) {
+							if (!n.convertLocal2ServerNode(jnodemap.getInt(i), jNewRows.getInt(i), jNewCols.getInt(i))) {
 								mNodesError = "Error converting local node";
 								return false;
 							}
@@ -2555,7 +2555,7 @@ public class Trial {
 				}
 				@Override
 				long id() {
-					return fieldCode;
+					return -1 * fieldCode; // hack
 				} // identify node field, use enum? will need if getValue func
 				@Override
 				NodePropertySource source() {

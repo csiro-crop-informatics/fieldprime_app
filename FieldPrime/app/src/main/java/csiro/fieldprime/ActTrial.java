@@ -1535,7 +1535,7 @@ public class ActTrial extends Globals.Activity
 	 * setFilter()
 	 * Basically a call back for DlgFilter to handle the user selections.
 	 */
-	public void setFilter(NodeAttribute att, String attval) {
+	public void setFilter(NodeProperty att, String attval) {
 		if (mTrial == null) return;
 		mTrial.setFilter(att, attval);
 		refreshNodeScreen();

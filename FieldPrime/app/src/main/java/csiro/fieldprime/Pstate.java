@@ -22,6 +22,7 @@ import android.database.sqlite.SQLiteDatabase;
 
 import csiro.fieldprime.Trial.Node;
 import csiro.fieldprime.Trial.NodeAttribute;
+import csiro.fieldprime.Trial.NodeProperty;
 import csiro.fieldprime.Trial.SortDirection;
 import csiro.fieldprime.Trial.SortType;
 
@@ -41,7 +42,7 @@ public class Pstate {
 	
 	// Filtering stuff:
 	private boolean mFiltering = false;
-	private NodeAttribute msFilterAttribute;
+	private NodeProperty msFilterAttribute;
 	private String msFilterAttValue;
 			
 	// METHODS: -------------------------------------------------------------------------
@@ -113,12 +114,12 @@ public class Pstate {
 	 * setFilterAttribute()
 	 * NB caller should ensure msFilterAttribute is cleared.
 	 */
-	private void setFilterAttribute(NodeAttribute nat) {
+	private void setFilterAttribute(NodeProperty nat) {
 		msFilterAttribute = nat;
 		// MFK maybe here we should set msFilterAttValue to null
 	}
 	
-	public NodeAttribute getFilterAttribute() { return msFilterAttribute; }
+	public NodeProperty getFilterAttribute() { return msFilterAttribute; }
 	public String getFilterAttValue() { return msFilterAttValue; }
 	public void setFilterAttValue(String attval) { msFilterAttValue = attval; }
 	
@@ -126,7 +127,7 @@ public class Pstate {
 	 * setFilter()
 	 * Set both the attribute and chosen value.
 	 */
-	public void setFilter(NodeAttribute att, String attval) {
+	public void setFilter(NodeProperty att, String attval) {
 		if (att == null)
 			clearFilter();
 		mFiltering = true;
@@ -168,9 +169,11 @@ public class Pstate {
 		
 		// Filtering state:
 		Tstore.TRIAL_SCORE_FILTER_ATTRIBUTE.setLongValue(g_db(), trialId, 
-				isFiltering() ? msFilterAttribute.getId() : null);
+				isFiltering() ? msFilterAttribute.id() : null);
 		Tstore.TRIAL_SCORE_FILTER_VALUE.setStringValue(g_db(), trialId,
 				isFiltering() ? getFilterAttValue() : null);
+		Tstore.TRIAL_SCORE_FILTER_NODEPROPERTY_SOURCE.setIntValue(g_db(), trialId,
+				isFiltering() ? msFilterAttribute.source().ordinal() : null);
 	}
 	
 	/*
@@ -201,10 +204,27 @@ public class Pstate {
 		
 		// Filtering state:
 		Long fattId = Tstore.TRIAL_SCORE_FILTER_ATTRIBUTE.getLongValue(g_db(), trl.getId());
+		Integer filtPropSource = Tstore.TRIAL_SCORE_FILTER_NODEPROPERTY_SOURCE.getIntValue(g_db(), trl.getId());
+		Trial.NodePropertySource nps = Trial.NodePropertySource.values()[filtPropSource];
+
+		switch (nps) {
+			case ATTRIBUTE:
+				break;
+			case SCORE:
+				break;
+			case FIXED:
+				break;
+			case LITERAL:
+				break;
+		}
 		if (fattId == null)
 			clearFilter();
 		else {
-			NodeAttribute fatt = trl.getAttribute(fattId);
+			NodeProperty fatt;
+			if (fattId == 0)
+				fatt = trl.getFixedNodeProperty(Trial.FIELD_ROW);
+			else
+				fatt = trl.getAttribute(fattId);
 			setFilterAttribute(fatt);
 			String fval = Tstore.TRIAL_SCORE_FILTER_VALUE.getStringValue(g_db(), trl.getId());
 			if (fval == null)

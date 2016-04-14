@@ -23,6 +23,9 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
 public enum Tstore {
+	// Changing the values could mean confusion on updating app.
+	// We could perhaps start each section at, say, a multiple of 100, thus allowing
+	// new related elements which can have contiguous numbers.
 	DUMMY_FIRST(0) {int y; void sety(){y=1;}},
 	
     TRIAL_NEXT_LOCAL_ID(1),
@@ -44,7 +47,10 @@ public enum Tstore {
 	
 	TRIAL_ZPRINT(10),
 	TRIAL_ZPRINT_TOP_OF_FORM(11), // remove these if blob works
-	TRIAL_ZPRINT_TEMPLATE(12);
+	TRIAL_ZPRINT_TEMPLATE(12),
+
+	TRIAL_SCORE_FILTER_NODEPROPERTY_SOURCE(13);
+
 
     private final int value;
     private Tstore(final int newValue) {
