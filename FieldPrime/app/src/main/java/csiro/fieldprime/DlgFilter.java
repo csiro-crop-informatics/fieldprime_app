@@ -16,22 +16,16 @@ package csiro.fieldprime;
 
 import java.util.ArrayList;
 
-import csiro.fieldprime.Trial.NodeAttribute;
 import csiro.fieldprime.Trial.NodeProperty;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
-import android.app.FragmentManager;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.Spinner;
-import android.widget.TextView;
 
 public class DlgFilter extends DialogFragment {
 	private static DlgFilter instance = null;    // only allow one Search instance at a time
@@ -58,7 +52,7 @@ public class DlgFilter extends DialogFragment {
 	public Dialog onCreateDialog(Bundle savedInstanceState) {
 		Trial trl = ((Globals)getActivity().getApplication()).currTrial();
 		Pstate pstate = trl.getPstate();
-		NodeProperty currProp = pstate.getFilterAttribute();
+		NodeProperty currProp = pstate.getFilterProperty();
 		
 		/*
 		 * Set up vlist with attribute selection spinner, and then when an
@@ -102,7 +96,7 @@ public class DlgFilter extends DialogFragment {
 		// check nat null case, change on attribute spinner selection
 		// MFK - where do we set the current value?
 		if (currProp != null) {
-			mAttValue = mMainView.addSpinner(currProp.getDistinctValues(), null, pstate.getFilterAttValue());
+			mAttValue = mMainView.addSpinner(currProp.getDistinctValues(), null, pstate.getFilterPropVal());
 		}
 		
 		final AlertDialog dlg = (new AlertDialog.Builder(getActivity())) // the final lets us refer to dlg in the handlers..

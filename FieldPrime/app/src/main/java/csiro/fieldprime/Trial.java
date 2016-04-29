@@ -40,7 +40,6 @@ import android.os.Bundle;
 import android.util.Log;
 import static csiro.fieldprime.DbNames.*;
 import static csiro.fieldprime.Trait.Datatype.*;
-import static csiro.fieldprime.Util.flog;
 
 /*
  * Class Trial
@@ -72,7 +71,7 @@ public class Trial {
 	private String mYear;
 	public String mAcronym;
 	
-	private Pstate pstate = new Pstate();  // Scoring screen state for trial
+	private Pstate mPstate = new Pstate();  // Scoring screen state for trial
 
 	/*
 	 * Trial Lists:
@@ -488,7 +487,7 @@ public class Trial {
 		return mIndexNames[num];
 	}
 	
-	public Pstate getPstate() { return pstate; }
+	public Pstate getPstate() { return mPstate; }
 
 
 	/*
@@ -945,15 +944,26 @@ public class Trial {
 		return new Result(tu);
 	}
 
+	private boolean isFiltered(Node node) {
+		if (!mPstate.isFiltering()) {
+			return false;
+		}
+		NodeProperty nodeProp = mPstate.getFilterProperty();
+		String propVal = mPstate.getFilterPropVal();
+		if (nodeProp == null || propVal == null) return false;
+		String nodePropVal = nodeProp.valueString(node);
+		return !(nodePropVal != null && nodePropVal.equalsIgnoreCase(propVal));
+	}
+
 	/*
 	 * addLocalNode()    XXX NOT ADDING TO FULL NODE LIST SO MAY BE LOST THRU FILTER CHANGES
 	 *                   XXX NOTE CURRENTLY EXPLICITLY DISALLOWING WHILE FILTERING ON
 	 * Create and add to the trial a "local" or "new" node.
 	 */
 	public Result addLocalNode() {
-		if (pstate.isFiltering()) { // May be a problem with filtering in place, so disable for now..
-			return new Result(false, "Disable filtering before adding new nodes");
-		}
+//		if (mPstate.isFiltering()) { // May be a problem with filtering in place, so disable for now..
+//			return new Result(false, "Disable filtering before adding new nodes");
+//		}
 		Integer NewLocalId = Tstore.TRIAL_NEXT_LOCAL_ID.getAndIncrementIntValue(
 				g_db(), (int)getId(), (int)Database.MIN_LOCAL_ID);
 		if (NewLocalId == null)
@@ -968,6 +978,23 @@ public class Trial {
 				break;
 		}
 		mFullNodeList.add(pos, node);
+
+		// If we are filtering, and this node should be shown under the filter,
+		// then we need to add it to the current node list. If we are filtering,
+		// and this node should not be shown, then alert user to avoid suprise.
+		if (mPstate.isFiltering()) {
+			boolean show = !isFiltered(node);
+			if (show) {
+				pos = 0;
+				for (; pos<mNodeList.size(); ++pos) {
+					if (!mNodeList.get(pos).isLocal())
+						break;
+				}
+				mNodeList.add(pos, node);
+			} else {
+				Util.toast("Node created, but not shown due to current filter");
+			}
+		}
 		
 		if (node.InsertOrUpdateDB() < 0)
 			new Result(false, "Cannot add node to database");
@@ -1005,17 +1032,17 @@ public class Trial {
 	 * a bunch of private Trial stuff.
 	 */
 	public void setFilter(NodeProperty att, String attval) {
-		pstate.setFilter(att, attval);
+		mPstate.setFilter(att, attval);
 		if (att == null) {
 			mNodeList = mFullNodeList;// NB Here is the only place an existing filter is removed
-			pstate.clearFilter();
+			mPstate.clearFilter();
 			Util.toast("No attribute selected, no filter applied. " + mNodeList.size() + "nodes in set");
 		} else {
-			pstate.setFilter(att, attval);
-			applyFilter(pstate);
+			mPstate.setFilter(att, attval);
+			applyFilter(mPstate);
 		}
 		resetNodeIndex();
-		pstate.sortList(null, this);
+		mPstate.sortList(null, this);
 	}
 
 	/*
@@ -1028,8 +1055,8 @@ public class Trial {
 			Util.toast("No filter specified");
 			return;
 		}
-		NodeProperty nat = ps.getFilterAttribute();
-		String attvalue = ps.getFilterAttValue();
+		NodeProperty nat = ps.getFilterProperty();
+		String attvalue = ps.getFilterPropVal();
 		if (nat == null || attvalue == null) return;
 
 		ArrayList<Node> newNodeList = new ArrayList<Node>();
@@ -1049,7 +1076,7 @@ public class Trial {
 			Util.msg("No nodes in set, filter not applied"); // why not? Need to handle empty list
 			ps.clearFilter();
 			// MFK this goes to no filter, perhaps it should revert to previous filter
-			// For now the pstate says no filter, but the trial may still have a filtered list.
+			// For now the mPstate says no filter, but the trial may still have a filtered list.
 		} else {
 			// Filters on:
 			mNodeList = newNodeList;
@@ -1067,13 +1094,13 @@ public class Trial {
 	 * relevant details (that aren't in the db) in the Bundle.
 	 */
 	public boolean restoreScoringState(Bundle savedInstanceState) {
-		boolean bres = pstate.restore(this);
-		applyFilter(pstate);
-		pstate.sortList(null, this);
+		boolean bres = mPstate.restore(this);
+		applyFilter(mPstate);
+		mPstate.sortList(null, this);
 		return bres;
 	}
 	public void saveScoringState() {
-		pstate.save(getId());
+		mPstate.save(getId());
 	}
 
 	/*
@@ -2616,6 +2643,23 @@ public class Trial {
 		}
 	}
 
+	public NodeProperty getNodeProperty(NodePropertySource source, long propId) {
+		switch (source) {
+			case ATTRIBUTE:
+				return getAttribute(propId);
+			case SCORE:
+				for (TraitInstance ti : new TraitInstanceIterator())
+					if (ti.getId() == propId)
+						return ti;
+				break;
+			case FIXED:
+				return getFixedNodeProperty((int)propId);
+			case LITERAL:
+				break;
+		}
+		return null;
+	}
+
 	/*
 	 * getNodeProperties()
 	 * List of all available NodeProperties.
@@ -3653,7 +3697,43 @@ public class Trial {
 
 		@Override
 		ArrayList<?> getDistinctValues() {
-			return null;
+			ArrayList<Object> vals = new ArrayList<Object>();
+			String qry = String.format(Locale.US,
+					"select distinct %s from %s where %s = %d", DM_VALUE, TABLE_DATUM,
+					DM_TRAITINSTANCE_ID, getId());
+			Cursor ccr = null;
+			Datatype datatype = mTrait.getType();
+			try {
+				ccr = g_db().rawQuery(qry, null);
+				if (ccr.moveToFirst())
+					do {
+						if (!ccr.isNull(0))
+							switch (datatype) {
+								case T_CATEGORICAL:
+									// Have to get the category values here..
+									break;
+								case T_DATE:
+								case T_INTEGER:
+									vals.add(ccr.getInt(0));
+									break;
+								case T_DECIMAL:
+									vals.add(ccr.getDouble(0));
+									break;
+								case T_LOCATION:
+									break;
+								case T_NONE:
+									break;
+								case T_PHOTO:
+									break;
+								case T_STRING:
+									vals.add(ccr.getString(0));
+									break;
+								default:
+									break;
+							}
+					} while (ccr.moveToNext());
+			} finally { if (ccr != null) ccr.close(); }
+			return vals;
 		}
 
 		public TraitInstance next() {
