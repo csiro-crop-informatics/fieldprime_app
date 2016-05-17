@@ -416,10 +416,11 @@ public class ActBluetooth extends VerticalList.VLActivity {
     			mStream = socket.getInputStream();
     			int red = 0;
     			int curLen = 0;
-    			byte[] buffer = new byte[128];
+				final int BUFFER_LENGTH = 256;
+    			byte[] buffer = new byte[BUFFER_LENGTH];
     			do {
     				try {
-    					red = mStream.read(buffer, curLen, 128 - curLen);
+    					red = mStream.read(buffer, curLen, BUFFER_LENGTH - curLen);
     					if (red == -1) {
     						Util.toast("End of stream reached");  // MFK remove, also can we detect if connection lost?
     					}
@@ -445,6 +446,12 @@ public class ActBluetooth extends VerticalList.VLActivity {
         						publishProgress(data);  							
     						}   						
     					}
+
+						if (mStream.available() == 0) {
+							String data = new String(buffer, 0, curLen);
+							curLen = 0;
+							publishProgress(data);
+						}
     					
     				} catch (Exception ex) {
     					red = -1;
