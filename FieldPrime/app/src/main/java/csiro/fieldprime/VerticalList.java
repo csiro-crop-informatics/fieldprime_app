@@ -127,7 +127,13 @@ public class VerticalList extends ViewLine {
 		div.setBackgroundResource(R.color.gray);
 		addView(div);
 	}
-	
+
+	public EditText addEditText() {
+		EditText et = new EditText(mCtx);
+		addView(et);
+		return et;
+	}
+
 	ListView addList(String prompt, final String [] items, OnItemClickListener handler) {
 		if (prompt != null) addTextCentre(prompt);
 

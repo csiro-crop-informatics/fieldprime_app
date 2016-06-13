@@ -29,6 +29,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -261,6 +263,7 @@ public class ActBluetooth extends VerticalList.VLActivity {
       	private Trait mTrait;
       	private Cstate mConnected = Cstate.UNCONNECTED;
 		private BluetoothConnection mBtConnection;
+		public Pattern mPattern;
       	
       	MyBluetoothDevice(BluetoothDevice btd) {
       		mDevice = btd;
@@ -449,6 +452,11 @@ public class ActBluetooth extends VerticalList.VLActivity {
 
 						if (mStream.available() == 0) {
 							String data = new String(buffer, 0, curLen);
+							// do filtering, or matching here
+							Matcher matcher = mDevice.mPattern.matcher(data);
+							if (matcher.matches()) {
+								data = matcher.group(1);
+							}
 							curLen = 0;
 							publishProgress(data);
 						}
@@ -519,6 +527,7 @@ public class ActBluetooth extends VerticalList.VLActivity {
 		static private DlgBTconnect instance = null;    // only allow one Search instance at a time
 		private  VerticalList mMainView;
 		private  RadioGroup mChoice;
+		private String mPatternString;
 		static private final int CHOICE_NAVIGATION = 1;
 		static private final int CHOICE_SCORING = 2;
 		private TextView mNavPrompt;
@@ -565,6 +574,9 @@ public class ActBluetooth extends VerticalList.VLActivity {
 							mTraitSpinner.setVisibility(which == CHOICE_SCORING ? View.VISIBLE : View.GONE);
 						}
 					});
+
+// add edittext here for pattern
+			mPatternString = mMainView.addEditText();
 
 			// MFK, here and in other places (DlgFilter) we have a prompt and a spinner.
 			// Perhaps make a VerticalList object for this. With visibility set option
