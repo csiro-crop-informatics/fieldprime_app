@@ -48,6 +48,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.Spinner;
@@ -453,9 +454,12 @@ public class ActBluetooth extends VerticalList.VLActivity {
 						if (mStream.available() == 0) {
 							String data = new String(buffer, 0, curLen);
 							// do filtering, or matching here
-							Matcher matcher = mDevice.mPattern.matcher(data);
-							if (matcher.matches()) {
-								data = matcher.group(1);
+							if (mDevice.mPattern != null) {
+								Matcher matcher = mDevice.mPattern.matcher(data);
+								if (matcher.matches()) {
+									data = matcher.group(1);
+								}
+// "LA 982 123545\r\n"
 							}
 							curLen = 0;
 							publishProgress(data);
@@ -528,6 +532,7 @@ public class ActBluetooth extends VerticalList.VLActivity {
 		private  VerticalList mMainView;
 		private  RadioGroup mChoice;
 		private String mPatternString;
+		private EditText mPatternStringEdit;
 		static private final int CHOICE_NAVIGATION = 1;
 		static private final int CHOICE_SCORING = 2;
 		private TextView mNavPrompt;
@@ -576,7 +581,7 @@ public class ActBluetooth extends VerticalList.VLActivity {
 					});
 
 // add edittext here for pattern
-			mPatternString = mMainView.addEditText();
+			mPatternStringEdit = mMainView.addEditText();
 
 			// MFK, here and in other places (DlgFilter) we have a prompt and a spinner.
 			// Perhaps make a VerticalList object for this. With visibility set option
@@ -634,6 +639,13 @@ public class ActBluetooth extends VerticalList.VLActivity {
 					b.setOnClickListener(new View.OnClickListener() {
 						@Override
 						public void onClick(View view) {
+							// Pattern string:
+							mPatternString = mPatternStringEdit.getText().toString();
+							if (mPatternString != null && mPatternString.length() > 2)
+								mDevice.mPattern = Pattern.compile(mPatternString);
+							else
+								mDevice.mPattern = null;
+
 							int which = mChoice.getCheckedRadioButtonId();
 							switch (which) {
 								case CHOICE_NAVIGATION:
