@@ -63,7 +63,8 @@ import static csiro.fieldprime.ActBluetooth.Mode.*;
 public class ActBluetooth extends VerticalList.VLActivity {
 	public enum Mode { NONE, NAVIGATION, SCORING }
 	public enum Cstate {UNCONNECTED, CONNECTING, CONNECTED }
-    interface handlers {
+	public enum DeviceType {UNKNOWN, MOTOROLA_CS300, METTLER_TOLEDO, ALLFLEX, ZEBRA_PRINTER};
+	interface handlers {
 		void handleBluetoothValue(String value, MyBluetoothDevice btDev);
     }
 	static private final String SCAN_LABEL = "Scan";
@@ -137,10 +138,6 @@ public class ActBluetooth extends VerticalList.VLActivity {
 		intentFilter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
 		ActBluetooth.this.registerReceiver(myReceiver, intentFilter);
 		mBluetoothAdapter.startDiscovery();
-	}
-
-	private boolean isPrinter(BluetoothDevice btd) {
-		return (btd.getBluetoothClass().getDeviceClass() == 1664);
 	}
 
 	private void updateButtonsAndDetails() {
@@ -265,6 +262,7 @@ public class ActBluetooth extends VerticalList.VLActivity {
       	private Cstate mConnected = Cstate.UNCONNECTED;
 		private BluetoothConnection mBtConnection;
 		public Pattern mPattern;
+		public DeviceType mType = DeviceType.UNKNOWN;
       	
       	MyBluetoothDevice(BluetoothDevice btd) {
       		mDevice = btd;
@@ -354,8 +352,28 @@ public class ActBluetooth extends VerticalList.VLActivity {
 			return details;
 		}
 
+		private void determineDeviceType() {
+			int devClass = device().getBluetoothClass().getDeviceClass();
+			switch (devClass) {
+				case 1664:
+					Util.msg("ZEBRA_PRINTER");
+					mType = DeviceType.ZEBRA_PRINTER;
+					break;
+				case 7936:
+					Util.msg("CS3000");
+					mType = DeviceType.MOTOROLA_CS300;
+					break;
+				default:
+					mType = DeviceType.UNKNOWN;
+			}
+		}
+		private boolean isPrinter(BluetoothDevice btd) {
+			return (btd.getBluetoothClass().getDeviceClass() == 1664);
+		}
+
 		private void configure() {
-			if (isPrinter(device())) {
+			determineDeviceType();
+			if (mType == DeviceType.ZEBRA_PRINTER) {
 				device().getAddress();
 				// Get and remember the mac address, have to get this back to the scoring activity
 				g.setPrinterMacAddr(device().getAddress());
@@ -425,11 +443,47 @@ public class ActBluetooth extends VerticalList.VLActivity {
     			do {
     				try {
     					red = mStream.read(buffer, curLen, BUFFER_LENGTH - curLen);
-    					if (red == -1) {
-    						Util.toast("End of stream reached");  // MFK remove, also can we detect if connection lost?
-    					}
-    					curLen += red;
-    					
+						if (red == -1) {
+							Util.toast("End of stream reached");  // MFK remove, also can we detect if connection lost?
+						}
+						curLen += red;
+
+						switch (mDevice.mType) {
+							case UNKNOWN:
+								break;
+							case MOTOROLA_CS300:
+								// Motorola barcode scanner case:
+								if (buffer[curLen - 1] == '\r') {
+									String data = new String(buffer, 0, curLen - 1);
+									curLen = 0;
+									publishProgress(data);
+									continue;
+								}
+								break;
+							case METTLER_TOLEDO:
+								if (curLen > 7) {
+									int i;
+									for (i = 0; i<7; ++i) {
+										if (buffer[i + curLen - 7] != mMTEnd[i])
+											break;
+									}
+									if (i == 7) {
+										String data = new String(buffer, 0, curLen - 7);
+										curLen = 0;
+										publishProgress(data);
+										continue;
+									}
+								}
+								break;
+							case ALLFLEX:
+								break;
+							case ZEBRA_PRINTER:
+								break;
+							default:
+								break;
+						}
+						// Default processing:
+
     					// Motorola barcode scanner case:
     					if (buffer[curLen - 1] == '\r') {
     						String data = new String(buffer, 0, curLen - 1);
@@ -450,7 +504,10 @@ public class ActBluetooth extends VerticalList.VLActivity {
         						publishProgress(data);  							
     						}   						
     					}
-
+// Bug here - as this is called after previous 2 cases.
+// Ideally have devices auto recognized, or select from dropdown with supported options listed.
+						// Generic processing - if there's no more to read.
+						// Use filter if one provided, else just process the read data.
 						if (mStream.available() == 0) {
 							String data = new String(buffer, 0, curLen);
 							// do filtering, or matching here
@@ -533,6 +590,7 @@ public class ActBluetooth extends VerticalList.VLActivity {
 		private  RadioGroup mChoice;
 		private String mPatternString;
 		private EditText mPatternStringEdit;
+		private Spinner mDevTypeSpinner;
 		static private final int CHOICE_NAVIGATION = 1;
 		static private final int CHOICE_SCORING = 2;
 		private TextView mNavPrompt;
@@ -580,8 +638,10 @@ public class ActBluetooth extends VerticalList.VLActivity {
 						}
 					});
 
-// add edittext here for pattern
+			// Add edittext for pattern
 			mPatternStringEdit = mMainView.addEditText();
+			ArrayList<DeviceType> devTypes = new ArrayList<DeviceType>(Arrays.asList(DeviceType.values()));
+			mDevTypeSpinner = mMainView.addSpinner(devTypes, "-- choose! --", mDevice.mType); // detect type for defaults
 
 			// MFK, here and in other places (DlgFilter) we have a prompt and a spinner.
 			// Perhaps make a VerticalList object for this. With visibility set option

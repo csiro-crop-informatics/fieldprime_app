@@ -66,7 +66,6 @@ public class DlgFilter extends DialogFragment {
 		Trial.NodeProperty colProp = trl.getFixedNodeProperty(Trial.FIELD_COL);
 		ArrayList<NodeProperty> propList = trl.getNodeProperties();
 
-		//mAttSpin = mMainView.addSpinner(trl.getAttributes(), "-- No Filter --", currProp);
 		mAttSpin = mMainView.addSpinner(propList, "-- No Filter --", currProp);
 		mAttSpin.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
 			@Override
