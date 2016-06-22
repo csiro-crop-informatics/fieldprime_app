@@ -63,7 +63,23 @@ import static csiro.fieldprime.ActBluetooth.Mode.*;
 public class ActBluetooth extends VerticalList.VLActivity {
 	public enum Mode { NONE, NAVIGATION, SCORING }
 	public enum Cstate {UNCONNECTED, CONNECTING, CONNECTED }
-	public enum DeviceType {UNKNOWN, MOTOROLA_CS300, METTLER_TOLEDO, ALLFLEX, ZEBRA_PRINTER};
+	public enum DeviceType {
+		UNKNOWN(null),
+		MOTOROLA_CS300("(.*)\r"),
+		METTLER_TOLEDO("(.*)\033enter."),
+		ALLFLEX(".. (.*)\r\n"),
+		ZEBRA_PRINTER(null)
+		;
+		private String mPatternString = null;
+		private Pattern mPattern = null;
+		public String getPatternString() {return mPatternString;}
+		public Pattern getPattern() {return mPattern;}
+		private DeviceType(String patternString) {
+			mPatternString = patternString;
+			if (patternString != null)
+				mPattern = Pattern.compile(patternString);
+		}
+	};
 	interface handlers {
 		void handleBluetoothValue(String value, MyBluetoothDevice btDev);
     }
@@ -353,7 +369,13 @@ public class ActBluetooth extends VerticalList.VLActivity {
 		}
 
 		private void determineDeviceType() {
+			// NB. I don't think these device classes are unique to the
+			// device types here, so this must be overridable by user.
+			// For example 7936 (used by motorola) is in the Android
+			// BlueTooth docs as "UNCATEGORIZED". And zero is MISC.
+			// I don't have a Mettler Toledo scale to find out what it's class is.
 			int devClass = device().getBluetoothClass().getDeviceClass();
+			Util.toast(String.format("BlueTooth Device Class: %d", devClass));
 			switch (devClass) {
 				case 1664:
 					mType = DeviceType.ZEBRA_PRINTER;
@@ -361,7 +383,7 @@ public class ActBluetooth extends VerticalList.VLActivity {
 				case 7936:
 					mType = DeviceType.MOTOROLA_CS300;
 					break;
-				case x:
+				case 0:
 					mType = DeviceType.ALLFLEX;
 					break;
 				default:
@@ -449,54 +471,29 @@ public class ActBluetooth extends VerticalList.VLActivity {
 						}
 						curLen += red;
 
-						switch (mDevice.mType) {
-							case MOTOROLA_CS300:
-							case METTLER_TOLEDO:
-								// Use pattern:
-								String data = new String(buffer, 0, curLen);
-								// do filtering, or matching here
-								if (mDevice.mPattern != null) {
-									Matcher matcher = mDevice.mPattern.matcher(data);
-									if (matcher.matches()) {
-										data = matcher.group(1);
-									}
-								}
-								curLen = 0;
-								publishProgress(data);
-								continue;
-
+//						switch (mDevice.mType) {
+//							case ALLFLEX:
 //							case MOTOROLA_CS300:
-//								if (buffer[curLen - 1] == '\r') {
-//									String data = new String(buffer, 0, curLen - 1);
-//									curLen = 0;
-//									publishProgress(data);
-//									continue;
-//								}
-//								break;
 //							case METTLER_TOLEDO:
-//								if (curLen > 7) {
-//									int i;
-//									for (i = 0; i<7; ++i) {
-//										if (buffer[i + curLen - 7] != mMTEnd[i])
-//											break;
-//									}
-//									if (i == 7) {
-//										data = new String(buffer, 0, curLen - 7);
-//										curLen = 0;
-//										publishProgress(data);
-//										continue;
+//								// Use pattern:
+//								String data = new String(buffer, 0, curLen);
+//								// do filtering, or matching here
+//								if (mDevice.mPattern != null) {
+//									Matcher matcher = mDevice.mPattern.matcher(data);
+//									if (matcher.matches()) {
+//										data = matcher.group(1);
 //									}
 //								}
+//								curLen = 0;
+//								publishProgress(data);
+//								continue;
+//							case ZEBRA_PRINTER:
 //								break;
-							case ALLFLEX:
-								break;
-							case ZEBRA_PRINTER:
-								break;
-							case UNKNOWN:
-								break;
-							default:
-								break;
-						}
+//							case UNKNOWN:
+//								break;
+//							default:
+//								break;
+//						}
 						// Default processing:
 
 //    					// Motorola barcode scanner case:
@@ -650,10 +647,12 @@ public class ActBluetooth extends VerticalList.VLActivity {
 						}
 					});
 
-			// Add edittext for pattern
-			mPatternStringEdit = mMainView.addEditText();
+			// Pattern stuff - we probly want to pass in select handler for the spinner,
+			// so that if UNKNOWN is selected we show EditText, or maybe it's OK to just
+			// have this there in all cases. But it needs a prompt. Try horiz Viewline?
 			ArrayList<DeviceType> devTypes = new ArrayList<DeviceType>(Arrays.asList(DeviceType.values()));
-			mDevTypeSpinner = mMainView.addSpinner(devTypes, "-- choose! --", mDevice.mType); // detect type for defaults
+			mDevTypeSpinner = mMainView.addSpinner(devTypes, "-- Choose --", mDevice.mType); // detect type for defaults
+			mPatternStringEdit = mMainView.addEditText(); // Edittext for pattern
 
 			// MFK, here and in other places (DlgFilter) we have a prompt and a spinner.
 			// Perhaps make a VerticalList object for this. With visibility set option
@@ -730,8 +729,10 @@ public class ActBluetooth extends VerticalList.VLActivity {
 									}
 									break;
 								default:
-									mDevice.setMode(Mode.NONE);
-									break;
+									Util.msg("Please indicate whether to use for navigating or scoring");
+									return;
+//									mDevice.setMode(Mode.NONE);
+//									break;
 							}
 
 							// Pattern string:
@@ -751,13 +752,16 @@ public class ActBluetooth extends VerticalList.VLActivity {
 									case UNKNOWN:
 										break;
 									case MOTOROLA_CS300: // ends with /r
-										mDevice.mPattern = Pattern.compile("(.*)\r");
+										mDevice.mPattern = dt.getPattern(); //Pattern.compile("(.*)\r");
+// could use this for all of them..
 										break;
+//										mDevice.mPattern = Pattern.compile("(.*)\r");
+//										break;
 									case ALLFLEX:  // eg "LA 982 123545\r\n"
 										mDevice.mPattern = Pattern.compile(".. (.*)\r\n");
 										break;
 									case METTLER_TOLEDO: // {27,101,110,116,101,114,46};   // bytes at end of Mettler Toledo scale send
-										mDevice.mPattern = Pattern.compile("(.*)\eenter.");
+										mDevice.mPattern = Pattern.compile("(.*)\033enter.");
 										break;
 									case ZEBRA_PRINTER:
 										break;
