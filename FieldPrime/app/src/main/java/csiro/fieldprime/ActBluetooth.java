@@ -356,12 +356,13 @@ public class ActBluetooth extends VerticalList.VLActivity {
 			int devClass = device().getBluetoothClass().getDeviceClass();
 			switch (devClass) {
 				case 1664:
-					Util.msg("ZEBRA_PRINTER");
 					mType = DeviceType.ZEBRA_PRINTER;
 					break;
 				case 7936:
-					Util.msg("CS3000");
 					mType = DeviceType.MOTOROLA_CS300;
+					break;
+				case x:
+					mType = DeviceType.ALLFLEX;
 					break;
 				default:
 					mType = DeviceType.UNKNOWN;
@@ -449,63 +450,76 @@ public class ActBluetooth extends VerticalList.VLActivity {
 						curLen += red;
 
 						switch (mDevice.mType) {
-							case UNKNOWN:
-								break;
 							case MOTOROLA_CS300:
-								// Motorola barcode scanner case:
-								if (buffer[curLen - 1] == '\r') {
-									String data = new String(buffer, 0, curLen - 1);
-									curLen = 0;
-									publishProgress(data);
-									continue;
-								}
-								break;
 							case METTLER_TOLEDO:
-								if (curLen > 7) {
-									int i;
-									for (i = 0; i<7; ++i) {
-										if (buffer[i + curLen - 7] != mMTEnd[i])
-											break;
-									}
-									if (i == 7) {
-										String data = new String(buffer, 0, curLen - 7);
-										curLen = 0;
-										publishProgress(data);
-										continue;
+								// Use pattern:
+								String data = new String(buffer, 0, curLen);
+								// do filtering, or matching here
+								if (mDevice.mPattern != null) {
+									Matcher matcher = mDevice.mPattern.matcher(data);
+									if (matcher.matches()) {
+										data = matcher.group(1);
 									}
 								}
-								break;
+								curLen = 0;
+								publishProgress(data);
+								continue;
+
+//							case MOTOROLA_CS300:
+//								if (buffer[curLen - 1] == '\r') {
+//									String data = new String(buffer, 0, curLen - 1);
+//									curLen = 0;
+//									publishProgress(data);
+//									continue;
+//								}
+//								break;
+//							case METTLER_TOLEDO:
+//								if (curLen > 7) {
+//									int i;
+//									for (i = 0; i<7; ++i) {
+//										if (buffer[i + curLen - 7] != mMTEnd[i])
+//											break;
+//									}
+//									if (i == 7) {
+//										data = new String(buffer, 0, curLen - 7);
+//										curLen = 0;
+//										publishProgress(data);
+//										continue;
+//									}
+//								}
+//								break;
 							case ALLFLEX:
 								break;
 							case ZEBRA_PRINTER:
+								break;
+							case UNKNOWN:
 								break;
 							default:
 								break;
 						}
 						// Default processing:
 
-    					// Motorola barcode scanner case:
-    					if (buffer[curLen - 1] == '\r') {
-    						String data = new String(buffer, 0, curLen - 1);
-    						curLen = 0;
-    						publishProgress(data);
-    					}
-    					
-    					// Mettler-Toledo scale case:
-    					else if (curLen > 7) {
-    						int i;
-    						for (i = 0; i<7; ++i) {
-    							if (buffer[i + curLen - 7] != mMTEnd[i])
-    								break;
-    						}
-    						if (i == 7) {
-        						String data = new String(buffer, 0, curLen - 7);
-        						curLen = 0;
-        						publishProgress(data);  							
-    						}   						
-    					}
-// Bug here - as this is called after previous 2 cases.
-// Ideally have devices auto recognized, or select from dropdown with supported options listed.
+//    					// Motorola barcode scanner case:
+//    					if (buffer[curLen - 1] == '\r') {
+//    						String data = new String(buffer, 0, curLen - 1);
+//    						curLen = 0;
+//    						publishProgress(data);
+//    					}
+//
+//    					// Mettler-Toledo scale case:
+//    					else if (curLen > 7) {
+//    						int i;
+//    						for (i = 0; i<7; ++i) {
+//    							if (buffer[i + curLen - 7] != mMTEnd[i])
+//    								break;
+//    						}
+//    						if (i == 7) {
+//        						String data = new String(buffer, 0, curLen - 7);
+//        						curLen = 0;
+//        						publishProgress(data);
+//    						}
+//    					}
+
 						// Generic processing - if there's no more to read.
 						// Use filter if one provided, else just process the read data.
 						if (mStream.available() == 0) {
@@ -516,12 +530,10 @@ public class ActBluetooth extends VerticalList.VLActivity {
 								if (matcher.matches()) {
 									data = matcher.group(1);
 								}
-// "LA 982 123545\r\n"
 							}
 							curLen = 0;
 							publishProgress(data);
 						}
-    					
     				} catch (Exception ex) {
     					red = -1;
     				}
@@ -699,13 +711,6 @@ public class ActBluetooth extends VerticalList.VLActivity {
 					b.setOnClickListener(new View.OnClickListener() {
 						@Override
 						public void onClick(View view) {
-							// Pattern string:
-							mPatternString = mPatternStringEdit.getText().toString();
-							if (mPatternString != null && mPatternString.length() > 2)
-								mDevice.mPattern = Pattern.compile(mPatternString);
-							else
-								mDevice.mPattern = null;
-
 							int which = mChoice.getCheckedRadioButtonId();
 							switch (which) {
 								case CHOICE_NAVIGATION:
@@ -728,7 +733,40 @@ public class ActBluetooth extends VerticalList.VLActivity {
 									mDevice.setMode(Mode.NONE);
 									break;
 							}
-							((ActBluetooth)getActivity()).updateButtonsAndDetails();
+
+							// Pattern string:
+							mPatternString = mPatternStringEdit.getText().toString();
+							if (mPatternString != null && mPatternString.length() > 2)
+								try {
+									mDevice.mPattern = Pattern.compile(mPatternString);
+								}
+								catch (Exception ex) {
+									Util.msg("Invalid pattern");
+									return;  // test this
+									//mDevice.mPattern = null;
+								}
+							else {
+								DeviceType dt = (DeviceType) mDevTypeSpinner.getSelectedItem();
+								switch (dt) {
+									case UNKNOWN:
+										break;
+									case MOTOROLA_CS300: // ends with /r
+										mDevice.mPattern = Pattern.compile("(.*)\r");
+										break;
+									case ALLFLEX:  // eg "LA 982 123545\r\n"
+										mDevice.mPattern = Pattern.compile(".. (.*)\r\n");
+										break;
+									case METTLER_TOLEDO: // {27,101,110,116,101,114,46};   // bytes at end of Mettler Toledo scale send
+										mDevice.mPattern = Pattern.compile("(.*)\eenter.");
+										break;
+									case ZEBRA_PRINTER:
+										break;
+									default:
+										mDevice.mPattern = null;
+								}
+							}
+
+							((ActBluetooth) getActivity()).updateButtonsAndDetails();
 							dlg.dismiss();
 						}
 					});
