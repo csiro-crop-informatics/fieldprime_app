@@ -382,8 +382,9 @@ public class ActBluetooth extends VerticalList.VLActivity {
 				case 1664:
 					mDeviceType = DeviceType.ZEBRA_PRINTER;
 					break;
-				case 7936:
-					mDeviceType = DeviceType.MOTOROLA_CS300;
+				case 7936:  // Mettler Toledo and CS300 both have this
+//					mDeviceType = DeviceType.MOTOROLA_CS300;
+					mDeviceType = DeviceType.AUTO;
 					break;
 				case 0:
 					mDeviceType = DeviceType.ALLFLEX;
