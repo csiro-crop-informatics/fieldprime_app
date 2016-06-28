@@ -65,8 +65,8 @@ public class ActBluetooth extends VerticalList.VLActivity {
 	public enum Mode { NONE, NAVIGATION, SCORING }
 	public enum Cstate {UNCONNECTED, CONNECTING, CONNECTED }
 	public enum DeviceType {
-		AUTO(null),
-		UNKNOWN(null),
+		AUTO_DETECT(null),
+		CUSTOM(null),
 		MOTOROLA_CS300("(.*)\r"),
 		METTLER_TOLEDO("(.*)\033enter."),
 		ALLFLEX(".. (.*)\r\n"),
@@ -280,7 +280,7 @@ public class ActBluetooth extends VerticalList.VLActivity {
       	private Cstate mConnected = Cstate.UNCONNECTED;
 		private BluetoothConnection mBtConnection;
 		public Pattern mPattern;
-		public DeviceType mDeviceType = DeviceType.UNKNOWN;
+		public DeviceType mDeviceType = DeviceType.AUTO_DETECT;
       	
       	MyBluetoothDevice(BluetoothDevice btd) {
       		mDevice = btd;
@@ -384,13 +384,13 @@ public class ActBluetooth extends VerticalList.VLActivity {
 					break;
 				case 7936:  // Mettler Toledo and CS300 both have this
 //					mDeviceType = DeviceType.MOTOROLA_CS300;
-					mDeviceType = DeviceType.AUTO;
+					mDeviceType = DeviceType.AUTO_DETECT;
 					break;
 				case 0:
 					mDeviceType = DeviceType.ALLFLEX;
 					break;
 				default:
-					mDeviceType = DeviceType.AUTO;
+					mDeviceType = DeviceType.AUTO_DETECT;
 			}
 		}
 		private boolean isPrinter(BluetoothDevice btd) {
@@ -474,37 +474,33 @@ public class ActBluetooth extends VerticalList.VLActivity {
 						}
 						curLen += red;
 
-						if (mDevice.mDeviceType == DeviceType.AUTO) {
-							if (mStream.available() == 0) {
-								String data = new String(buffer, 0, curLen);
-								// Try various options (for which we have mutually exclusive patterns):
-								Matcher matcher = DeviceType.MOTOROLA_CS300.getPattern().matcher(data);
-								if (!matcher.matches())
-									matcher = DeviceType.METTLER_TOLEDO.getPattern().matcher(data);
-								if (!matcher.matches())
-									matcher = DeviceType.ALLFLEX.getPattern().matcher(data);
+						if (mStream.available() > 0) continue;
+						String data = new String(buffer, 0, curLen);
+
+						if (mDevice.mDeviceType == DeviceType.AUTO_DETECT) {
+							// Try various options (for which we have mutually exclusive patterns):
+							Matcher matcher = DeviceType.MOTOROLA_CS300.getPattern().matcher(data);
+							if (!matcher.matches())
+								matcher = DeviceType.METTLER_TOLEDO.getPattern().matcher(data);
+							if (!matcher.matches())
+								matcher = DeviceType.ALLFLEX.getPattern().matcher(data);
+							if (matcher.matches()) {
+								data = matcher.group(1);
+							}
+						} else {
+							// Generic processing
+							// Use filter if one provided, else just process the read data.
+							// do filtering, or matching here
+							if (mDevice.mPattern != null) {
+								Matcher matcher = mDevice.mPattern.matcher(data);
 								if (matcher.matches()) {
 									data = matcher.group(1);
 								}
-								curLen = 0;
-								publishProgress(data);
-							}
-						} else {
-							// Generic processing - if there's no more to read.
-							// Use filter if one provided, else just process the read data.
-							if (mStream.available() == 0) {
-								String data = new String(buffer, 0, curLen);
-								// do filtering, or matching here
-								if (mDevice.mPattern != null) {
-									Matcher matcher = mDevice.mPattern.matcher(data);
-									if (matcher.matches()) {
-										data = matcher.group(1);
-									}
-								}
-								curLen = 0;
-								publishProgress(data);
 							}
 						}
+
+						curLen = 0;
+						publishProgress(data);
     				} catch (Exception ex) {
     					red = -1;
     				}
@@ -542,7 +538,6 @@ public class ActBluetooth extends VerticalList.VLActivity {
     			Util.toast("Connection Established");
     			fillScreen();   // We need to change the text of just connected device
     		} else {
-				//Util.toast("auto:"+values[0]);
 				String val = values[0];
 				if (val.length() > 0) {
 					handlers h = getHandler();
@@ -576,7 +571,9 @@ public class ActBluetooth extends VerticalList.VLActivity {
 		private  VerticalList mMainView;
 		private  RadioGroup mChoice;
 		private String mPatternString;
+		private TextView mPatternStringEditPrompt;
 		private EditText mPatternStringEdit;
+		private TextView mDevTypeSpinnerPrompt;
 		private Spinner mDevTypeSpinner;
 		static private final int CHOICE_NAVIGATION = 1;
 		static private final int CHOICE_SCORING = 2;
@@ -626,23 +623,8 @@ public class ActBluetooth extends VerticalList.VLActivity {
 					});
 
 			// Pattern stuff - we probly want to pass in select handler for the spinner,
-			// so that if UNKNOWN is selected we show EditText, or maybe it's OK to just
+			// so that if CUSTOM is selected we show EditText, or maybe it's OK to just
 			// have this there in all cases. But it needs a prompt. Try horiz Viewline?
-			ArrayList<DeviceType> devTypes = new ArrayList<DeviceType>(Arrays.asList(DeviceType.values()));
-			mDevTypeSpinner = mMainView.addSpinner(devTypes, "-- Choose --", mDevice.mDeviceType); // detect type for defaults
-			mDevTypeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-				@Override
-				public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
-					TextView tv = (TextView)selectedItemView;
-					mPatternStringEdit.setVisibility(tv.getText()==DeviceType.UNKNOWN.name() ? View.VISIBLE : View.GONE);
-					Util.toast("position: "+position+ tv.getText() + " name:" + DeviceType.UNKNOWN.name());
-				}
-				@Override
-				public void onNothingSelected(AdapterView<?> parentView) {
-					Util.toast("Nothing Selected");
-				}
-			});
-			mPatternStringEdit = mMainView.addEditText(); // Edittext for pattern
 
 			// MFK, here and in other places (DlgFilter) we have a prompt and a spinner.
 			// Perhaps make a VerticalList object for this. With visibility set option
@@ -683,6 +665,29 @@ public class ActBluetooth extends VerticalList.VLActivity {
 					mTraitSpinner.setVisibility(View.VISIBLE);
 					break;
 			}
+
+			mMainView.addLine();
+			mDevTypeSpinnerPrompt = mMainView.addTextNormal("Device Type:");
+			ArrayList<DeviceType> devTypes = new ArrayList<DeviceType>(Arrays.asList(DeviceType.values()));
+			mDevTypeSpinner = mMainView.addSpinner(devTypes, "-- Choose --", mDevice.mDeviceType); // detect type for defaults
+			mDevTypeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+				@Override
+				public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
+					TextView tv = (TextView) selectedItemView;
+					int vis = tv.getText() == DeviceType.CUSTOM.name() ? View.VISIBLE : View.GONE;
+					mPatternStringEditPrompt.setVisibility(vis);
+					mPatternStringEdit.setVisibility(vis);
+					Util.toast("position: " + position + tv.getText() + " name:" + DeviceType.CUSTOM.name());
+				}
+
+				@Override
+				public void onNothingSelected(AdapterView<?> parentView) {
+					Util.toast("Nothing Selected");
+				}
+			});
+			mPatternStringEditPrompt = mMainView.addTextNormal("Custom Java Regex:");
+			mPatternStringEditPrompt.setVisibility(View.GONE);
+			mPatternStringEdit = mMainView.addEditText(); // Edittext for pattern
 
 			final AlertDialog dlg = (new AlertDialog.Builder(getActivity())) // the final lets us refer to dlg in the handlers..
 					.setTitle("Configure")
@@ -726,7 +731,7 @@ public class ActBluetooth extends VerticalList.VLActivity {
 							// Pattern string:
 							DeviceType dt = (DeviceType) mDevTypeSpinner.getSelectedItem();
 							switch (dt) {
-								case UNKNOWN: // Get user entered pattern if present
+								case CUSTOM: // Get user entered pattern if present
 									mPatternString = mPatternStringEdit.getText().toString();
 									if (mPatternString != null && mPatternString.length() > 2)
 										try {
@@ -744,7 +749,7 @@ public class ActBluetooth extends VerticalList.VLActivity {
 									mDevice.mPattern = dt.getPattern(); //Pattern.compile("(.*)\r");
 									break;
 								case ZEBRA_PRINTER:
-								case AUTO:
+								case AUTO_DETECT:
 								default:
 									mDevice.mPattern = null;
 									break;
