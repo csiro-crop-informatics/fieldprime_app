@@ -68,7 +68,8 @@ public class ActBluetooth extends VerticalList.VLActivity {
 		AUTO_DETECT(null),
 		CUSTOM(null),
 		MOTOROLA_CS300("(.*)\r"),
-		METTLER_TOLEDO("(.*)\033enter."),
+		METTLER_TOLEDO_ML3002("(.*)\033enter."),
+		METTLER_TOLEDO_ML4001("\\s*(.*) g\\s*"),
 		ALLFLEX(".. (.*)\r\n"),
 		ZEBRA_PRINTER(null)
 		;
