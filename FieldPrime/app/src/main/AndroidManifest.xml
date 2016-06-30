@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="csiro.fieldprime"
-    android:versionCode="527"
-    android:versionName="FieldPrime v1.1.7 - June 28 2016 " >
+    android:versionCode="530"
+    android:versionName="FieldPrime v1.1.7 - June 30 2016 " >
 
     <uses-sdk
         android:minSdkVersion="17"

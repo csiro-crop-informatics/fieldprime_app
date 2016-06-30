@@ -498,6 +498,9 @@ public class ActBluetooth extends VerticalList.VLActivity {
 								Matcher matcher = mDevice.mPattern.matcher(data);
 								if (matcher.matches()) {
 									data = matcher.group(1);
+								} else {
+									//curLen = 0;
+									continue;
 								}
 							}
 						}
@@ -672,7 +675,7 @@ public class ActBluetooth extends VerticalList.VLActivity {
 			mMainView.addLine();
 			mDevTypeSpinnerPrompt = mMainView.addTextNormal("Device Type:");
 			ArrayList<DeviceType> devTypes = new ArrayList<DeviceType>(Arrays.asList(DeviceType.values()));
-			mDevTypeSpinner = mMainView.addSpinner(devTypes, "-- Choose --", mDevice.mDeviceType); // detect type for defaults
+			mDevTypeSpinner = mMainView.addSpinner(devTypes, null, mDevice.mDeviceType); // detect type for defaults
 			mDevTypeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
 				@Override
 				public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
@@ -733,6 +736,7 @@ public class ActBluetooth extends VerticalList.VLActivity {
 
 							// Pattern string:
 							DeviceType dt = (DeviceType) mDevTypeSpinner.getSelectedItem();
+							mDevice.mDeviceType = dt;
 							switch (dt) {
 								case CUSTOM: // Get user entered pattern if present
 									mPatternString = mPatternStringEdit.getText().toString();
