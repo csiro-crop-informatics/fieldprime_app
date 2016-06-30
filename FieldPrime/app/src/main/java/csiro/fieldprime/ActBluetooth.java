@@ -482,9 +482,11 @@ public class ActBluetooth extends VerticalList.VLActivity {
 							// Try various options (for which we have mutually exclusive patterns):
 							Matcher matcher = DeviceType.MOTOROLA_CS300.getPattern().matcher(data);
 							if (!matcher.matches())
-								matcher = DeviceType.METTLER_TOLEDO.getPattern().matcher(data);
+								matcher = DeviceType.METTLER_TOLEDO_ML3002.getPattern().matcher(data);
 							if (!matcher.matches())
 								matcher = DeviceType.ALLFLEX.getPattern().matcher(data);
+							if (!matcher.matches())
+								matcher = DeviceType.METTLER_TOLEDO_ML4001.getPattern().matcher(data);
 							if (matcher.matches()) {
 								data = matcher.group(1);
 							}
@@ -746,8 +748,9 @@ public class ActBluetooth extends VerticalList.VLActivity {
 									break;
 								case MOTOROLA_CS300: // ends with /r
 								case ALLFLEX:  // eg "LA 982 123545\r\n"
-								case METTLER_TOLEDO: // {27,101,110,116,101,114,46};   // bytes at end of Mettler Toledo scale send
-									mDevice.mPattern = dt.getPattern(); //Pattern.compile("(.*)\r");
+								case METTLER_TOLEDO_ML3002: // {27,101,110,116,101,114,46};   // bytes at end of Mettler Toledo scale send
+								case METTLER_TOLEDO_ML4001:
+									mDevice.mPattern = dt.getPattern();
 									break;
 								case ZEBRA_PRINTER:
 								case AUTO_DETECT:
