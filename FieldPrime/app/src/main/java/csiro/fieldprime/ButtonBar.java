@@ -76,10 +76,10 @@ public class ButtonBar {  // MFK should extend LinearLayout no?  but we have to 
 	}
 	
 	/*
-	 * ResetButtons()
+	 * resetButtons()
 	 * Clear bar and reset with specified buttons.
 	 */
-	public void ResetButtons(String [] captions, int [] ids) {
+	public void resetButtons(String[] captions, int[] ids) {
 		mButtonBar.removeAllViews();
 		mNumButtons = 0;
 		int count = captions.length;
@@ -87,6 +87,16 @@ public class ButtonBar {  // MFK should extend LinearLayout no?  but we have to 
 			addButton(captions[i], ids[i]);
 	}
 
+	public void removeButton(Button butt) {
+		mButtonBar.removeView(butt);
+		mNumButtons = mButtonBar.getChildCount();
+		mButtonBar.setWeightSum(mNumButtons);
+	}
+	public void removeAll() {
+		mButtonBar.removeAllViews();
+		mNumButtons = 0;
+		mButtonBar.setWeightSum(mNumButtons);
+	}
 	public LinearLayout Layout() {
 		return mButtonBar;
 	}

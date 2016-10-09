@@ -16,21 +16,16 @@ package csiro.fieldprime;
 
 import java.util.ArrayList;
 
-import csiro.fieldprime.Trial.NodeAttribute;
+import csiro.fieldprime.Trial.NodeProperty;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
-import android.app.FragmentManager;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.Spinner;
-import android.widget.TextView;
 
 public class DlgFilter extends DialogFragment {
 	private static DlgFilter instance = null;    // only allow one Search instance at a time
@@ -40,7 +35,7 @@ public class DlgFilter extends DialogFragment {
 	private Spinner mAttValue;
 		
 	// Prevent external constructor call, newInstance should be used instead.
-	private DlgFilter() {}
+//	private DlgFilter() {}
 
 	public static void newInstance() {
 		/*
@@ -57,27 +52,32 @@ public class DlgFilter extends DialogFragment {
 	public Dialog onCreateDialog(Bundle savedInstanceState) {
 		Trial trl = ((Globals)getActivity().getApplication()).currTrial();
 		Pstate pstate = trl.getPstate();
-		NodeAttribute nodeAtt = pstate.getFilterAttribute();
+		NodeProperty currProp = pstate.getFilterProperty();
 		
 		/*
 		 * Set up vlist with attribute selection spinner, and then when an
 		 * attribute is selected a spinner with that attribute's values
 		 */
-		mMainView = new VerticalList(getActivity());	
+		mMainView = new VerticalList(getActivity(), false);
 		// Add attribute spinner:
-		mMainView.addText("Filter Attribute:");
-		mAttSpin = mMainView.addSpinner(trl.getAttributes(), "-- No Filter --", nodeAtt);
+		mMainView.addTextNormal("Filter Attribute:");
+
+		Trial.NodeProperty rowProp = trl.getFixedNodeProperty(Trial.FIELD_ROW);
+		Trial.NodeProperty colProp = trl.getFixedNodeProperty(Trial.FIELD_COL);
+		ArrayList<NodeProperty> propList = trl.getNodeProperties();
+
+		mAttSpin = mMainView.addSpinner(propList, "-- No Filter --", currProp);
 		mAttSpin.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
 			@Override
 			public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
 				Object obj = parent.getItemAtPosition(position);
-				if (obj instanceof NodeAttribute) {
-					NodeAttribute n = (NodeAttribute) obj;
-					Util.toast(n.name());
+				if (obj instanceof NodeProperty) {
+					NodeProperty np = (NodeProperty) obj;
+					Util.toast(np.name());
 					mMainView.removeView(mAttValue);
-					ArrayList<?> distinctVals = n.getDistinctValues();
+					ArrayList<?> distinctVals = np.getDistinctValues();
 					if (distinctVals == null || distinctVals.size() <= 0) {
-						Util.toast("No values for attribute " + n.name());
+						Util.toast("No values for attribute " + np.name());
 					} else {
 						mAttValue = mMainView.addSpinner(distinctVals, null, null);
 					}
@@ -90,12 +90,12 @@ public class DlgFilter extends DialogFragment {
 		});
 
 		// Add edit text for value, with prompt:
-		mMainView.addText("Filter Value:");
+		mMainView.addTextNormal("Filter Value:");
 
 		// check nat null case, change on attribute spinner selection
 		// MFK - where do we set the current value?
-		if (nodeAtt != null) {
-			mAttValue = mMainView.addSpinner(nodeAtt.getDistinctValues(), null, pstate.getFilterAttValue());
+		if (currProp != null) {
+			mAttValue = mMainView.addSpinner(currProp.getDistinctValues(), null, pstate.getFilterPropVal());
 		}
 		
 		final AlertDialog dlg = (new AlertDialog.Builder(getActivity())) // the final lets us refer to dlg in the handlers..
@@ -118,19 +118,21 @@ public class DlgFilter extends DialogFragment {
 						// Attribute text:
 						String attSearchTxt = null;
 						
-						NodeAttribute searchAtt = null;
+						NodeProperty searchAtt = null;
 						int spInd = mAttSpin.getSelectedItemPosition();  // need pos as first item is prompt string.
 						if (spInd > 0)
-							searchAtt = (NodeAttribute) mAttSpin.getSelectedItem();
+							searchAtt = (NodeProperty) mAttSpin.getSelectedItem();
 						
 						// Get value if there:
 						if (mAttValue != null) {
 							Object attValObj = mAttValue.getSelectedItem();
-							if (attValObj != null)
+							if (attValObj != null) {
 								attSearchTxt = attValObj.toString();
+								((ActTrial) getActivity()).setFilter(searchAtt, attSearchTxt);
+							}
 						}
 						
-						((ActTrial)getActivity()).setFilter(searchAtt, attSearchTxt);
+
 						dlg.dismiss();
 					}
 				});

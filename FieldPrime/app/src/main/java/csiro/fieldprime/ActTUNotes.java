@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import android.content.Context;
 import android.view.View;
 import android.widget.EditText;
-import csiro.fieldprime.R;
+
 import csiro.fieldprime.Trial.Node;
 import csiro.fieldprime.Trial.Node.Note;
 
@@ -38,10 +38,10 @@ public class ActTUNotes extends VerticalList.VLActivity {
 			mStats.setEnabled(true);
 			mStats.requestFocus();
 			Util.ShowSoftKeyboard(mStats);
-			ResetButtons(editingButtonCaptions, editingButtonIds);
+			resetButtons(editingButtonCaptions, editingButtonIds);
 		}
 		public void BrowseMode() {
-			ResetButtons(browsingButtonCaptions, browsingButtonIds);
+			resetButtons(browsingButtonCaptions, browsingButtonIds);
 		}
 	}
 

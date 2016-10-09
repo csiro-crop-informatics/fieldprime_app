@@ -40,7 +40,6 @@ import android.os.Bundle;
 import android.util.Log;
 import static csiro.fieldprime.DbNames.*;
 import static csiro.fieldprime.Trait.Datatype.*;
-import static csiro.fieldprime.Util.flog;
 
 /*
  * Class Trial
@@ -72,7 +71,7 @@ public class Trial {
 	private String mYear;
 	public String mAcronym;
 	
-	private Pstate pstate = new Pstate();  // Scoring screen state for trial
+	private Pstate mPstate = new Pstate();  // Scoring screen state for trial
 
 	/*
 	 * Trial Lists:
@@ -96,6 +95,8 @@ public class Trial {
 	
 	/*
 	 * Create a NodeProperty instance for the following four node members:
+	 * Perhaps should be enum, but these may be deprecated at some stage..
+	 * NB - these values are used as indexes into mFixedTups.
 	 */
 	public static final int FIELD_ROW = 0;
 	public static final int FIELD_COL = 1;
@@ -161,14 +162,14 @@ public class Trial {
 			trl.mIndexNames[1] = indname;
 		
 		// Set up the fixed properties:
-		trl.mFixedTups.add(NodeProperty.newFixedInstance(trl.getIndexName(0), FIELD_ROW, T_INTEGER));
-		trl.mFixedTups.add(NodeProperty.newFixedInstance(trl.getIndexName(1), FIELD_COL, T_INTEGER));
-		trl.mFixedTups.add(NodeProperty.newFixedInstance("Barcode", FIELD_BARCODE, T_STRING));
-		trl.mFixedTups.add(NodeProperty.newFixedInstance("Location", FIELD_LOCATION, T_LOCATION));
+		trl.mFixedTups.add(NodeProperty.newFixedInstance(trl, trl.getIndexName(0), FIELD_ROW, T_INTEGER));
+		trl.mFixedTups.add(NodeProperty.newFixedInstance(trl, trl.getIndexName(1), FIELD_COL, T_INTEGER));
+		trl.mFixedTups.add(NodeProperty.newFixedInstance(trl, "Barcode", FIELD_BARCODE, T_STRING));
+		trl.mFixedTups.add(NodeProperty.newFixedInstance(trl, "Location", FIELD_LOCATION, T_LOCATION));
 
 		// Get trial ready for use.
 		trl.initScoreSetList();
-		trl.setNodeIndex(0);
+		trl.resetNodeIndex();
 
 		return new Result(trl);
 	}
@@ -486,7 +487,7 @@ public class Trial {
 		return mIndexNames[num];
 	}
 	
-	public Pstate getPstate() { return pstate; }
+	public Pstate getPstate() { return mPstate; }
 
 
 	/*
@@ -671,11 +672,11 @@ public class Trial {
 	//*** Node Stuff: **************************************************************************
 
 	/*
-	 * gotoNode()
+	 * gotoNodeByBarcode()
 	 * Find node by barcode in current list.
 	 * If this becomes too slow, we could search based on the current ordering, or maintain an index list of some kind.
 	 */
-	public boolean gotoNode(String barcode) {
+	public boolean gotoNodeByBarcode(String barcode) {
 		for (int i = 0; i < mNodeList.size(); ++i) {
 			Node tu = mNodeList.get(i);
 			if (tu.mBarcode.equalsIgnoreCase(barcode)) {
@@ -709,10 +710,17 @@ public class Trial {
 	public int getNodeIndex() {
 		return mNodeIndex;
 	}
-	
 
 	private void setNodeIndex(int index) {
 		this.mNodeIndex = index;
+	}
+
+	/**
+	 * resetNodeIndex()
+	 * Set current position to zero, if any nodes, else -1.
+	 */
+	private void resetNodeIndex() {
+		setNodeIndex(mNodeList.size() > 0 ? 0 : -1);
 	}
 
 	/*
@@ -798,6 +806,21 @@ public class Trial {
 			this.atVal = atVal;
 		}
 	}
+
+	/**
+	 * Get one node matching row col. Null if none found.
+	 * @param row index 1 value
+	 * @param col index 2 value
+	 * @return First found node, or null if none found with specified values
+	 */
+	public Node getNodeByRowCol(int row, int col) {
+		for (int i = 0; i < mNodeList.size(); ++i) {
+			Node nd = mNodeList.get(i);
+			if (nd.mRow == row && nd.mCol == col)
+				return nd;
+		}
+		return null;
+	}
 	public ArrayList<TuAtt> getMatchingNodes(int row, int col, NodeAttribute att, String searchTxt) {
 		ArrayList<TuAtt> foundNodes = new ArrayList<TuAtt>();
 		boolean bcol = col >= 0;
@@ -877,6 +900,7 @@ public class Trial {
 	/*
 	 * getMatchingNodes()
 	 * NB doesn't rely on Trial..
+	 * ..which presumably suggests this should be a NodeAttribute method.
 	 */
 	public ArrayList<Long> getMatchingNodes(NodeAttribute att, String searchTxt) {
 		ArrayList<Long> nlist = new ArrayList<Long>();
@@ -920,15 +944,26 @@ public class Trial {
 		return new Result(tu);
 	}
 
+	private boolean isFiltered(Node node) {
+		if (!mPstate.isFiltering()) {
+			return false;
+		}
+		NodeProperty nodeProp = mPstate.getFilterProperty();
+		String propVal = mPstate.getFilterPropVal();
+		if (nodeProp == null || propVal == null) return false;
+		String nodePropVal = nodeProp.valueString(node);
+		return !(nodePropVal != null && nodePropVal.equalsIgnoreCase(propVal));
+	}
+
 	/*
 	 * addLocalNode()    XXX NOT ADDING TO FULL NODE LIST SO MAY BE LOST THRU FILTER CHANGES
 	 *                   XXX NOTE CURRENTLY EXPLICITLY DISALLOWING WHILE FILTERING ON
 	 * Create and add to the trial a "local" or "new" node.
 	 */
 	public Result addLocalNode() {
-		if (pstate.isFiltering()) { // May be a problem with filtering in place, so disable for now..
-			return new Result(false, "Disable filtering before adding new nodes");
-		}
+//		if (mPstate.isFiltering()) { // May be a problem with filtering in place, so disable for now..
+//			return new Result(false, "Disable filtering before adding new nodes");
+//		}
 		Integer NewLocalId = Tstore.TRIAL_NEXT_LOCAL_ID.getAndIncrementIntValue(
 				g_db(), (int)getId(), (int)Database.MIN_LOCAL_ID);
 		if (NewLocalId == null)
@@ -943,6 +978,23 @@ public class Trial {
 				break;
 		}
 		mFullNodeList.add(pos, node);
+
+		// If we are filtering, and this node should be shown under the filter,
+		// then we need to add it to the current node list. If we are filtering,
+		// and this node should not be shown, then alert user to avoid suprise.
+		if (mPstate.isFiltering()) {
+			boolean show = !isFiltered(node);
+			if (show) {
+				pos = 0;
+				for (; pos<mNodeList.size(); ++pos) {
+					if (!mNodeList.get(pos).isLocal())
+						break;
+				}
+				mNodeList.add(pos, node);
+			} else {
+				Util.toast("Node created, but not shown due to current filter");
+			}
+		}
 		
 		if (node.InsertOrUpdateDB() < 0)
 			new Result(false, "Cannot add node to database");
@@ -979,18 +1031,18 @@ public class Trial {
 	 * This needed (rather than doing this from ActTrial), because of the need to touch
 	 * a bunch of private Trial stuff.
 	 */
-	public void setFilter(NodeAttribute att, String attval) {
-		pstate.setFilter(att, attval);
+	public void setFilter(NodeProperty att, String attval) {
+		mPstate.setFilter(att, attval);
 		if (att == null) {
 			mNodeList = mFullNodeList;// NB Here is the only place an existing filter is removed
-			pstate.clearFilter();
+			mPstate.clearFilter();
 			Util.toast("No attribute selected, no filter applied. " + mNodeList.size() + "nodes in set");
 		} else {
-			pstate.setFilter(att, attval);
-			applyFilter(pstate);
+			mPstate.setFilter(att, attval);
+			applyFilter(mPstate);
 		}
-		setNodeIndex(0);
-		pstate.sortList(null, this);
+		resetNodeIndex();
+		mPstate.sortList(null, this);
 	}
 
 	/*
@@ -1003,8 +1055,8 @@ public class Trial {
 			Util.toast("No filter specified");
 			return;
 		}
-		NodeAttribute nat = ps.getFilterAttribute();
-		String attvalue = ps.getFilterAttValue();
+		NodeProperty nat = ps.getFilterProperty();
+		String attvalue = ps.getFilterPropVal();
 		if (nat == null || attvalue == null) return;
 
 		ArrayList<Node> newNodeList = new ArrayList<Node>();
@@ -1024,11 +1076,11 @@ public class Trial {
 			Util.msg("No nodes in set, filter not applied"); // why not? Need to handle empty list
 			ps.clearFilter();
 			// MFK this goes to no filter, perhaps it should revert to previous filter
-			// For now the pstate says no filter, but the trial may still have a filtered list.
+			// For now the mPstate says no filter, but the trial may still have a filtered list.
 		} else {
 			// Filters on:
 			mNodeList = newNodeList;
-			setNodeIndex(0);
+			resetNodeIndex();
 			Util.toast("Filtering on attribute " + nat.name() + " = " + attvalue + "\n"
 					+ count + " nodes in set");
 		}
@@ -1042,13 +1094,13 @@ public class Trial {
 	 * relevant details (that aren't in the db) in the Bundle.
 	 */
 	public boolean restoreScoringState(Bundle savedInstanceState) {
-		boolean bres = pstate.restore(this);
-		applyFilter(pstate);
-		pstate.sortList(null, this);
+		boolean bres = mPstate.restore(this);
+		applyFilter(mPstate);
+		mPstate.sortList(null, this);
 		return bres;
 	}
 	public void saveScoringState() {
-		pstate.save(getId());
+		mPstate.save(getId());
 	}
 
 	/*
@@ -1289,7 +1341,7 @@ public class Trial {
 	}
 	public void sortNodes(SortType ordering, boolean reverse) {
 		Collections.sort(mNodeList, new NodeComparator(ordering, reverse));
-		setNodeIndex(0); // after sorting, start at first
+		resetNodeIndex(); // after sorting, start at first
 	}
 	
 	
@@ -1298,12 +1350,12 @@ public class Trial {
 //		if (att.datatype() != T_INTEGER)
 //			return;  // Do nothing if not integer type
 //		Collections.sort(mNodeList, new NodeAttributeComparator(att, reverse));
-//		setNodeIndex(0); // after sorting, start at first
+//		resetNodeIndex(); // after sorting, start at first
 //	}
 
 	public void sortNodes(NodeAttribute a1, SortDirection d1, NodeAttribute a2, SortDirection d2) {
 		Collections.sort(mNodeList, new NodeAttributeComparator2(a1, d1, a2, d2));
-		setNodeIndex(0); // after sorting, start at first
+		resetNodeIndex(); // after sorting, start at first
 	}
 	
 	//##################################################################################################
@@ -1399,7 +1451,7 @@ public class Trial {
 			newlist.add(ast.node);
 		}
 		mNodeList = newlist;
-		setNodeIndex(0); // after sorting, start at first
+		resetNodeIndex(); // after sorting, start at first
 		return new Result();
 	}
 	//##################################################################################################
@@ -1442,7 +1494,7 @@ public class Trial {
 //		if (att1.datatype() != T_INTEGER || att2.datatype() != T_INTEGER)
 //			return;  // Do nothing if not integer type
 //		Collections.sort(mNodeList, new NodeAttributeComparator(att, reverse));
-//		setNodeIndex(0); // after sorting, start at first
+//		resetNodeIndex(); // after sorting, start at first
 //	}
 	
 	/*** END SORT STUFF **************************************************************************/
@@ -1601,10 +1653,10 @@ public class Trial {
 	}
 
 	/*
-	 * GetTraitList()
+	 * getTraitList()
 	 * Returns mTraitList as array.
 	 */
-	public Trait[] GetTraitList() {
+	public Trait[] getTraitList() {
 		return mTraitList.toArray(new Trait[mTraitList.size()]);
 	}
 
@@ -1832,13 +1884,13 @@ public class Trial {
 	/*
 	 * processJSONNodeAttributeValues()
 	 */
-	private void processJSONNodeAttributeValues(JSONObject jtu, Node tu) throws JSONException {
+	private void processJSONNodeAttributeValues(JSONObject jnode, Node node) throws JSONException {
 		// Get optional attributes:
-		if (jtu.has(JNODE_ATTVALS)) {
-			JSONObject jnatts = jtu.getJSONObject(JNODE_ATTVALS);
+		if (jnode.has(JNODE_ATTVALS)) {
+			JSONObject jnatts = jnode.getJSONObject(JNODE_ATTVALS);
 			for (NodeAttribute att : mAttributeList) {
 				if (!jnatts.isNull(att.name()))
-					tu.setAttributeValue(att, jnatts.getString(att.name()));
+					node.setAttributeValue(att, jnatts.getString(att.name()));
 			}
 		}
 	}
@@ -1949,18 +2001,7 @@ public class Trial {
 		processJSONTrialPropertyValues(json);
 		
 		// Nodes:
-		/*
-		 * This if below should be removed when there are no longer clients expecting
-		 * only JTRL_TRIALUNITS_ARRAY. This catch installed for client version 362 (svn).
-		 * Eventually should just be:
-		 *   res = processJSONNodes(json.getJSONArray(JTRL_NODES_ARRAY), update, prog);
-		 */
-		JSONArray nodesArray;
-		if (json.has(JTRL_NODES_ARRAY))
-			nodesArray = json.getJSONArray(JTRL_NODES_ARRAY);
-		else
-			nodesArray = json.getJSONArray(JTRL_TRIALUNITS_ARRAY);
-		res = processJSONNodes(nodesArray, update, prog);
+		res = processJSONNodes(json.getJSONArray(JTRL_NODES_ARRAY), update, prog);
 		if (res.bad())
 			return res;
 		
@@ -2158,12 +2199,14 @@ public class Trial {
 					}
 					// Get ids for the created nodes:
 					JSONObject responseObj = (JSONObject)mRes.obj();
-					if (!responseObj.has("nodeIds")) {
+					if (!responseObj.has("nodeIds") || !responseObj.has("nodeRows") || !responseObj.has("nodeCols")) {
 						mNodesError = "Error in response: no nodeIds element";
 						return false;						
 					}
-					try {
-						JSONArray jnodemap = responseObj.getJSONArray("nodeIds");	
+					try { // better to have single array of node objects
+						JSONArray jnodemap = responseObj.getJSONArray("nodeIds");
+						JSONArray jNewRows = responseObj.getJSONArray("nodeRows");
+						JSONArray jNewCols = responseObj.getJSONArray("nodeCols");
 						if (jnodemap.length() != trial.getNumLocalNodes()) {
 							mNodesError = "Error in response: Wrong number of nodes returned";
 							return false;						
@@ -2182,7 +2225,7 @@ public class Trial {
 						for (int i = jnodemap.length() - 1; i >= 0; i--) {
 							int localId = locNodes.getInt(i);
 							Node n = trial.getNodeById(localId);
-							if (!n.convertLocal2ServerNode(jnodemap.getInt(i))) {
+							if (!n.convertLocal2ServerNode(jnodemap.getInt(i), jNewRows.getInt(i), jNewCols.getInt(i))) {
 								mNodesError = "Error converting local node";
 								return false;
 							}
@@ -2214,6 +2257,9 @@ public class Trial {
 							return false;
 						} else
 							mNotesSuccess = true;
+					} else {
+						mNotesSuccess = true;
+						mNotesToUpload = false;
 					}
 				} else {
 					mNotesSuccess = false;
@@ -2281,9 +2327,11 @@ public class Trial {
 							(mNotesSuccess ? "success" : "FAIL - ") + mNotesError);
 				}
 				if (mTINumToUpload > 0) {
-					summary += "Score uploads :\n";
-					summary += mTINumToUpload + " scoreSet/sample" + (mTINumToUpload > 1 ? "s" : "")
-							+ " to upload:\n  success: " + mTiSuccessCount + "\n  FAIL: " + mTiFailCount;
+					summary += "ScoreSet uploads :\n";
+					summary += "" + mTiSuccessCount + "/" + mTINumToUpload + " scoreSets successfully uploaded\n";
+					if (mTiFailCount > 0) {
+						summary += "" + mTiFailCount + "/" + mTINumToUpload + " scoreSets failed to upload\n";
+					}
 					if (mTiError != null)
 						summary += " " + mTiError;
 				}
@@ -2385,7 +2433,7 @@ public class Trial {
 		boolean navigatingAway();
 		//void processTextValue(String val);
 	}
-	public enum NodePropertySource { ATTRIBUTE, SCORE, FIXED, LITERAL };
+	public enum NodePropertySource { ATTRIBUTE, SCORE, FIXED, LITERAL }
 	static abstract class NodeProperty {
 		abstract long id();                     // id should be unique within source
 		abstract NodePropertySource source();
@@ -2426,7 +2474,8 @@ public class Trial {
 		 */
 		abstract Double valueNumeric(Node tu);
 
-		
+		abstract ArrayList<?> getDistinctValues();
+
 		/*
 		 * newIntLiteralInstance()
 		 * Create prop with a constant int value.
@@ -2442,6 +2491,11 @@ public class Trial {
 				@Override Object valueObject(Node tu) { return value; }
 				@Override Double valueNumeric(Node tu) {return new Double(value);}
 				@Override IDatum getCurrentIDatum() { return null; }
+				@Override ArrayList<?> getDistinctValues() {
+					ArrayList<Integer> dvals = new ArrayList<Integer>();
+					dvals.add(value);
+					return dvals;
+				}
 			};
 		}
 		
@@ -2516,7 +2570,7 @@ public class Trial {
 		 * newFixedInstance()
 		 * Create prop with a constant int value.
 		 */
-		static private NodeProperty newFixedInstance(final String name, final int fieldCode, final Datatype datatype) {
+		static private NodeProperty newFixedInstance(final Trial trial, final String name, final int fieldCode, final Datatype datatype) {
 			return new NodeProperty() {
 				@Override
 				String name() {
@@ -2528,7 +2582,7 @@ public class Trial {
 				}
 				@Override
 				long id() {
-					return fieldCode;
+					return -1 * fieldCode; // hack
 				} // identify node field, use enum? will need if getValue func
 				@Override
 				NodePropertySource source() {
@@ -2557,6 +2611,29 @@ public class Trial {
 					default: return null;
 					}
 				}
+
+				@Override
+				ArrayList<?> getDistinctValues() {
+					switch (fieldCode) {
+					case FIELD_ROW:
+					case FIELD_COL:
+						ArrayList<Integer> vals = new ArrayList<Integer>();
+						String qry = String.format(Locale.US,
+								"select distinct %s from %s where %s = %d", fieldCode == FIELD_ROW ? ND_ROW : ND_COL,
+								TABLE_NODE,	ND_TRIAL_ID, trial.getId());
+						Cursor ccr = null;
+						try {
+							ccr = g_db().rawQuery(qry, null);
+							if (ccr.moveToFirst())
+								do vals.add(ccr.getInt(0)); while (ccr.moveToNext());
+						} finally { if (ccr != null) ccr.close(); }
+						return vals;
+					case FIELD_BARCODE:
+					case FIELD_LOCATION:
+					default: return null;
+					}
+				}
+
 				@Override
 				IDatum getCurrentIDatum() {
 					// TODO Auto-generated method stub
@@ -2564,6 +2641,23 @@ public class Trial {
 				}
 			};
 		}
+	}
+
+	public NodeProperty getNodeProperty(NodePropertySource source, long propId) {
+		switch (source) {
+			case ATTRIBUTE:
+				return getAttribute(propId);
+			case SCORE:
+				for (TraitInstance ti : new TraitInstanceIterator())
+					if (ti.getId() == propId)
+						return ti;
+				break;
+			case FIXED:
+				return getFixedNodeProperty((int)propId);
+			case LITERAL:
+				break;
+		}
+		return null;
 	}
 
 	/*
@@ -2586,7 +2680,14 @@ public class Trial {
 		
 		return props;
 	}
-	
+
+	/*
+	 * Fixed Node Properties by name:
+	 */
+	public NodeProperty getFixedNodeProperty(int key) {
+		return mFixedTups.get(key);   // a bit hacky, but the way mFixedTups is set up means this works.
+	}
+
 	/*
 	 * notesAsJSON()
 	 * Returns JSON representation of all local trial notes. For example:
@@ -2792,13 +2893,15 @@ public class Trial {
 		 * convertLocal2ServerNode()
 		 * If this node is local, change it to a server node, with the given server id.
 		 */
-		private boolean convertLocal2ServerNode(int id) {
+		private boolean convertLocal2ServerNode(int id, int row, int col) {
 			if (!isLocal()) return false;
 			mLocal = 0;
 			// Update the db - we can't just use updateDB() as that won't work for updating the id.
 			// Remember current id as we need it to identify the node in the db to be updated:
 			long currentId = mId;
 			mId = id;
+			mRow = row;
+			mCol = col;
 			ContentValues values = new ContentValues();
 			values.put(ND_ID, mId);
 			values.put(ND_LOCAL, mLocal);
@@ -3262,6 +3365,7 @@ public class Trial {
 			
 		}
 
+		@Override
 		public ArrayList<?> getDistinctValues() {
 			ArrayList<Object> vals = new ArrayList<Object>();						
 			String qry = String.format(Locale.US,
@@ -3591,6 +3695,47 @@ public class Trial {
 			return null;
 		}
 
+		@Override
+		ArrayList<?> getDistinctValues() {
+			ArrayList<Object> vals = new ArrayList<Object>();
+			String qry = String.format(Locale.US,
+					"select distinct %s from %s where %s = %d", DM_VALUE, TABLE_DATUM,
+					DM_TRAITINSTANCE_ID, getId());
+			Cursor ccr = null;
+			Datatype datatype = mTrait.getType();
+			try {
+				ccr = g_db().rawQuery(qry, null);
+				if (ccr.moveToFirst())
+					do {
+						if (!ccr.isNull(0))
+							switch (datatype) {
+								case T_CATEGORICAL:
+									// Have to get the category values here..
+									break;
+								case T_DATE:
+								case T_INTEGER:
+									vals.add(ccr.getInt(0));
+									break;
+								case T_DECIMAL:
+									vals.add(ccr.getDouble(0));
+									break;
+								case T_LOCATION:
+									break;
+								case T_NONE:
+									break;
+								case T_PHOTO:
+									break;
+								case T_STRING:
+									vals.add(ccr.getString(0));
+									break;
+								default:
+									break;
+							}
+					} while (ccr.moveToNext());
+			} finally { if (ccr != null) ccr.close(); }
+			return vals;
+		}
+
 		public TraitInstance next() {
 			return getRepset().getTI(getSampleNum() + 1);
 		}
@@ -3897,6 +4042,8 @@ public class Trial {
 			return this.ordinal();
 		}
 		static public SortType fromValue(int val) {
+			if (val < SORT_COLUMN_SERPENTINE.ordinal() || val > SORT_CUSTOM.ordinal())
+				return null;
 			return values()[val];
 		}
 		public String text(Trial trial) {
@@ -3932,5 +4079,5 @@ public class Trial {
 	    public String toString() {
 	        return mText;
 	    }
-	};
+	}
 }

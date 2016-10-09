@@ -49,6 +49,9 @@ public class VerticalList extends ViewLine {
 	public VerticalList(Context context) {
 		this(context, null);
 	}
+	public VerticalList(Context context, boolean blackBackground) {
+		super((Globals.Activity)context, true, null, blackBackground);
+	}
 	public VerticalList(Context context, int size) {
 		super((Globals.Activity)context, true, null, size, true);
 	}
@@ -124,7 +127,13 @@ public class VerticalList extends ViewLine {
 		div.setBackgroundResource(R.color.gray);
 		addView(div);
 	}
-	
+
+	public EditText addEditText() {
+		EditText et = new EditText(mCtx);
+		addView(et);
+		return et;
+	}
+
 	ListView addList(String prompt, final String [] items, OnItemClickListener handler) {
 		if (prompt != null) addTextCentre(prompt);
 
@@ -413,6 +422,7 @@ public class VerticalList extends ViewLine {
 			View midView = getMidView();
 			if (midView != null) {
 				mMidViewSV = new ScrollView(this);
+				Util.removeViewFromParent(midView);
 				mMidViewSV.setBackgroundResource(R.color.black); // in case the text view is smaller than scrollview
 				mMidViewSV.addView(midView, new ScrollView.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
 				mTop.addView(mMidViewSV, new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, 0, 0.5f));

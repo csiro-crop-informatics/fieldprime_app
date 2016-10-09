@@ -77,7 +77,7 @@ public class Globals extends Application implements OnSharedPreferenceChangeList
 	public enum ScreenSize {
 		SMALL_SCREEN,
 		BIG_SCREEN
-	};
+	}
 	ScreenSize mScreenSize;
 	/*
 	 *  Screen item size names. Rather than setting sizes explicitly for every screen item,
@@ -422,7 +422,7 @@ public class Globals extends Application implements OnSharedPreferenceChangeList
 	}
 
 	public void setPrinterMacAddr(String address) { mPrinterMacAddr = address; }
-	public String getPrinterMacAddr() { return mPrinterMacAddr; };
+	public String getPrinterMacAddr() { return mPrinterMacAddr; }
 }
 
 

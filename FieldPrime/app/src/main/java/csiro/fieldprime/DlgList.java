@@ -57,6 +57,7 @@ public class DlgList extends DialogFragment {
 	 * Note, we should not, apparently, have argument in the constructor, but should
 	 * be using bundle instead.
 	 */
+	public DlgList(){}
 	DlgList(int cont, String titl, Object listVals[]) {
 		// Make list of strings to present from the array of objects:
 		mItems = listVals;

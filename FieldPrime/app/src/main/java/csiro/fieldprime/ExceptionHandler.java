@@ -38,6 +38,9 @@ public class ExceptionHandler { //implements java.lang.Thread.UncaughtExceptionH
 		StringWriter stackTrace = new StringWriter();
 		exception.printStackTrace(new PrintWriter(stackTrace));
 		StringBuilder errorReport = new StringBuilder();
+		try {  // Output version number if possible
+			errorReport.append("" + Util.getVersionName() + " (Build " + Util.getVersionCode() + ")" + SEP);
+		} catch (Throwable e)  {}
 		errorReport.append("************ CAUSE OF ERROR ************" + SEP + SEP);
 		errorReport.append(stackTrace.toString());
 		errorReport.append(SEP + "************ DEVICE INFORMATION ***********" + SEP);

@@ -58,7 +58,8 @@ public class DlgChooseScoreSets extends DialogFragment {
 	}
 
 	// Prevent external constructor call, newInstance should be used instead.
-	private DlgChooseScoreSets() {}
+	// ..but we need to have public for restarts
+	//private DlgChooseScoreSets() {}
 	
 	public static void newInstance(handler lhs, Trial trial) {
 		if (trial.GetTraitCaptionList() == null) { // Exit if no trait

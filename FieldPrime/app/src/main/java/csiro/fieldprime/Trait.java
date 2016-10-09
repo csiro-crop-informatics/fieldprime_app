@@ -77,11 +77,11 @@ public abstract class Trait {
         private Datatype(int value) {
                 mValue = value;
         }
-        
-        /*
-         * value()
-         * Convert Datatype to int.
-         */
+
+		/*
+                 * value()
+                 * Convert Datatype to int.
+                 */
         public int value() { return mValue; }
         
         /*
@@ -253,7 +253,13 @@ public abstract class Trait {
 	abstract boolean SupportsBluetoothScoring();
 	
 	// FUNCTIONS: ====================================================================================================
-	
+
+
+	@Override
+	public String toString() {
+		return this.getCaption();
+	}
+
 	static protected SQLiteDatabase g_db() {
 		return Globals.g.db();
 	}
@@ -460,7 +466,7 @@ public abstract class Trait {
 		 * be updated, i.e. change caption, description, or sub type specific attributes.
 		 * For the moment however, a trait is unchangeable once associated with a trial.
 		 */
-		for (Trait tr : trial.GetTraitList()) {
+		for (Trait tr : trial.getTraitList()) {
 			if (tr.getServerId() == serverId) {
 				/*
 				 * Trait already exists. So this is an update. 

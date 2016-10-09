@@ -6,6 +6,8 @@
  */
 
 package csiro.fieldprime;
+import static csiro.fieldprime.ActBluetooth.*;
+import static csiro.fieldprime.ActBluetooth.Mode.NAVIGATION;
 import static csiro.fieldprime.Util.flog;
 
 import java.util.ArrayList;
@@ -30,9 +32,6 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemSelectedListener;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
@@ -40,7 +39,6 @@ import android.widget.LinearLayout.LayoutParams;
 import android.widget.PopupMenu;
 import android.widget.PopupMenu.OnMenuItemClickListener;
 import android.widget.ScrollView;
-import android.widget.Spinner;
 import android.widget.TextView;
 import csiro.fieldprime.ActBluetooth.BluetoothConnection;
 import csiro.fieldprime.Datum.CallOut;
@@ -56,7 +54,7 @@ import csiro.fieldprime.Trial.SortType;
 import csiro.fieldprime.Trial.TraitInstance;
 
 public class ActTrial extends Globals.Activity
-	implements CallOut, OnSharedPreferenceChangeListener, ActBluetooth.handlers {
+	implements CallOut, OnSharedPreferenceChangeListener, handlers {
 	
 	// CONSTANTS: ====================================================================================================
 	static public final String ACTSCORING_TRIALNAME = "fieldprime.trialName";
@@ -89,12 +87,11 @@ public class ActTrial extends Globals.Activity
 	private View mPopupAnchor;
 	
 	// Text views for display of 2 node properties (each showing prop name and value):
-	private TextView mNodePropPrompt1;
-	private TextView mNodePropPrompt2;
+//	private TextView mNodePropPrompt1;
+//	private TextView mNodePropPrompt2;
 	private TextView mNodePropValue1;
 	private TextView mNodePropValue2;
 //	private TextView mTVRep;
-	private Spinner mNodePropSpin1;
 	
 //	private boolean mRepsPresent = false;
 	private VerticalList mTopLL;
@@ -185,7 +182,7 @@ public class ActTrial extends Globals.Activity
 		VerticalList topLL = setupScreen();
 		if (isRestart) 
 			myRestoreInstanceState(savedInstanceState);
-		mViewPager.setCurrentItem(1);
+
  		setContentView(topLL);
  		//Util.memoryStats(); // Show some memory stats
 	}
@@ -477,17 +474,26 @@ public class ActTrial extends Globals.Activity
 		if (mTrial.mShowRowCol) {
 			Node node =  mTrial.getCurrNode();
 			if (node.isLocal()) {
-				mNodePropPrompt1.setText("New");
-				mNodePropValue1.setText("Node");
-				mNodePropPrompt2.setText("" + node.localNumber());
-				mNodePropValue2.setText("");
+				mNodePropValue1.setText("New Node");
+				mNodePropValue2.setText("" + node.localNumber());
 			}
 			else {
-				mNodePropPrompt1.setText(mTrial.getIndexName(0));
-				mNodePropValue1.setText("" + node.getRow());
-				mNodePropPrompt2.setText(mTrial.getIndexName(1));
-				mNodePropValue2.setText("" + node.getCol());
+				mNodePropValue1.setText(mTrial.getIndexName(0) + " " + node.getRow());
+				mNodePropValue2.setText(mTrial.getIndexName(1) + " " + node.getCol());
 			}
+			// Old way with 2 text views each index
+//			if (node.isLocal()) {
+//				mNodePropPrompt1.setText("New");
+//				mNodePropValue1.setText("Node");
+//				mNodePropPrompt2.setText("" + node.localNumber());
+//				mNodePropValue2.setText("");
+//			}
+//			else {
+//				mNodePropPrompt1.setText(mTrial.getIndexName(0));    // NB really only need to set this once, on creation?
+//				mNodePropValue1.setText("" + node.getRow());
+//				mNodePropPrompt2.setText(mTrial.getIndexName(1));
+//				mNodePropValue2.setText("" + node.getCol());
+//			}
 		}
 		for (PropertyWidget aw : mPropertyWidgets) {
 			aw.RefreshValue();
@@ -699,15 +705,17 @@ public class ActTrial extends Globals.Activity
 	 */
 	//private void refreshNodeScreen() {
 	public void refreshNodeScreen() {
-		{
-			Node n = mTrial.getCurrNode();
-			if (n.isLocal()) {
-				Util.toast("local node");
-				// Display attribute nodes in traitSelector
-				// have to get the traitInstances and add them
-			} else {
-				// Remove attribute nodes in traitSelector
-			}
+		Node n = mTrial.getCurrNode();
+		if (n == null) {
+			// we need to disable next, prev, widgets... Everything but +node
+			return;
+		}
+		if (n.isLocal()) {
+			Util.toast("local node");
+			// Display attribute nodes in traitSelector
+			// have to get the traitInstances and add them
+		} else {
+			// Remove attribute nodes in traitSelector
 		}
 		
 		resetNodeScreenDetails(); // Refresh the displayed node attributes, MFK, don't need to if tu not changed
@@ -858,7 +866,7 @@ public class ActTrial extends Globals.Activity
 			// Setup clickable attribute name:
 			mAttName = new TextView(mCtx);
 			Util.setColoursWhiteOnBlack(mAttName);
-			mAttName.setTextSize(g.TextSize(g.SIZE_MEDIUM));
+			mAttName.setTextSize(g.TextSize(Globals.SIZE_MEDIUM));
 			mAttName.setLayoutParams(new LinearLayout.LayoutParams(0, LayoutParams.MATCH_PARENT, 0.33f));
 
 			mPop = new PopupMenu(mCtx, mAttName);
@@ -901,7 +909,7 @@ public class ActTrial extends Globals.Activity
 			mAttVal = new TextView(mCtx);
 			mAttVal.setHorizontallyScrolling(true);
 			Util.setColoursWhiteOnBlack(mAttVal);
-			mAttVal.setTextSize(g.TextSize(g.SIZE_MEDIUM));
+			mAttVal.setTextSize(g.TextSize(Globals.SIZE_MEDIUM));
 			mAttVal.setLayoutParams(new LinearLayout.LayoutParams(0, LayoutParams.MATCH_PARENT, 0.67f));
 			addView(mAttVal);
 		}
@@ -1019,7 +1027,13 @@ public class ActTrial extends Globals.Activity
 				genericEventHandler(v.getId());
 			}
 		});
-		
+
+		/***
+		 * If the trial has no nodes, then we need to not display, or disable many
+		 * of the screen items.
+		 */
+		final boolean emptyTrial = mTrial.getNumNodes() <= 0;
+
 		Util.setBackgroundBlack(mTopLL);//SetLayoutBackgroundBlack(mTopLL);
  		setContentView(mTopLL); // Switch to scoring layout.
 		
@@ -1031,122 +1045,96 @@ public class ActTrial extends Globals.Activity
 		 * NB. When Next or Prev is clicked we may need to inform the current Datum that we are
 		 * navigating away. And if the datum has a problem with that, we warn don't navigate away.
 		 */
- 		if (true) {
-			ViewLine pnll = new ViewLine(this, false,  new View.OnClickListener() {
-				@Override
-				public void onClick(View v) {
-					// Assuming here that click is Next or Prev, in which case we may
-					// need to inform the current Datum that we are navigating away.
-					// And if the datum has a problem with that, we warn don't navigate away.
-					if (mDatum != null)
-						mDatum.navigatingAwayWithWarning();
-					switch (v.getId()) {
-					case R.id.next:
-						Next();
-						break;
-					case R.id.prev:
-						Prev();
-						break;
-					default:
-						Util.msg("Unexpected view code for mTopLL");
-					}
+		ViewLine pnll = new ViewLine(this, false,  new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				// Assuming here that click is Next or Prev, in which case we may
+				// need to inform the current Datum that we are navigating away.
+				// And if the datum has a problem with that, we warn don't navigate away.
+				if (mDatum != null)
+					mDatum.navigatingAwayWithWarning();
+				switch (v.getId()) {
+				case R.id.next:
+					Next();
+					break;
+				case R.id.prev:
+					Prev();
+					break;
+				default:
+					Util.msg("Unexpected view code for mTopLL");
 				}
-			}, Globals.SIZE_BIG, false);
-			pnll.setBackgroundResource(R.color.silver);
-			pnll.AddButton("Prev", R.id.prev, false);
-			pnll.AddButton("Next", R.id.next, false);
-			mTopLL.addView(pnll);
-		} else {
- 			ViewLine pnll = new ViewLine(this, Globals.SIZE_BIG);
- 			pnll.setBackgroundResource(R.color.silver);
-			pnll.addButton("Prev", new View.OnClickListener() {
- 				@Override
- 				public void onClick(View v) {
- 					if (mDatum != null)
- 						mDatum.navigatingAwayWithWarning();
- 					Prev();
- 				}
- 			});
- 			pnll.addButton("Next", new View.OnClickListener() {
- 				@Override
- 				public void onClick(View v) {
- 					if (mDatum != null)
- 						mDatum.navigatingAwayWithWarning();
- 					Next();
- 				}
- 			});
- 			mTopLL.addView(pnll);
- 		}
+			}
+		}, Globals.SIZE_BIG, false);
+		pnll.setBackgroundResource(R.color.silver);
+		Button prev = pnll.AddButton("Prev", R.id.prev, false);
+		Button next = pnll.AddButton("Next", R.id.next, false);
+		if (emptyTrial) {
+			prev.setEnabled(false);
+			next.setEnabled(false);
+		}
+		mTopLL.addView(pnll);
 
 
 		// Row, Col, AddNode, Notes row: -------------------------------------------------------------------
  		ViewLine rcBar = new ViewLine(this, true);
 		mPopupAnchor = rcBar; // popup has to hang off something, and there might be no properties, the hline?
 		rcBar.setWeightSum(4f);
-		if (mTrial.mShowRowCol) {
-			// MFK: it might be better to replace pairs of text views ("row" "1") with a single one "row 1",
-			// which could also provide a menu (+1 -1) for easier navigation (have this for columns also).
-			// NB, the values here are overwritten by the call to refreshNodeScreen, but we do need to create these..
+		if (mTrial.mShowRowCol && !emptyTrial) {
+			// NB, we don't write values here as they are overwritten by the call to refreshNodeScreen, but we do need to create these.
 			// NB - will perhaps crash if mShowRowCol not true
-if (true) {			
-			mNodePropPrompt1 = rcBar.addTextView(mTrial.getIndexName(0), 1);
-			mNodePropValue1 = rcBar.addTextView(null, 1);
-			mNodePropPrompt2 = rcBar.addTextView(mTrial.getIndexName(1), 1);
-			mNodePropValue2 = rcBar.addTextView(null, 1);
-} else {
-	mNodePropPrompt1 = rcBar.addTextView(mTrial.getIndexName(0), 1);
-	mNodePropValue1 = rcBar.addTextView(null, 1);
-	mNodePropPrompt2 = rcBar.addTextView(mTrial.getIndexName(1), 1);
-	mNodePropValue2 = rcBar.addTextView(null, 1);
 
-	
-	// Todo:
-	// Cope with non valid selection ("no such node" screen)
-	//
-	
-	mNodePropSpin1 = new Spinner(this);
-	ArrayAdapter<CharSequence> mAdapter = new ArrayAdapter<CharSequence>(mCtx, android.R.layout.simple_spinner_item);
-// get the indicies	
-	final ArrayList<String> mItems = new ArrayList<String>();
+			/**
+			 * Add 4 textviews to show, eg, "Row 1 Col 1". Where the row col values have popup menu
+			 * options to navigate to other row/cols. The dropdowns show all distinct values available
+			 * for that field (row or col), but if you select a value for which there is no node for the
+			 * currently selected other field you cannot navigate there. An alternative approach we could
+			 * take would be to only show in the popup the values for which there is a node to navigate to.
+			 * NB we use popups instead of spinners, since unless the popup is activated the code is simply
+			 * using textviews (eg when changing them after other navigation means) and therefore doesn't have
+			 * to find and select the right value in a spinner when things change.
+			 *
+			 * Note we could probably replace each pair of textviews ("row" "1") with a single one ("row 1")
+			 */
+			mNodePropValue1 = rcBar.addTextView(null, 2);
+			mNodePropValue2 = rcBar.addTextView(null, 2);
+			View.OnClickListener dry = new View.OnClickListener() {
+				@Override
+				public void onClick(View arg0) {
+					/**
+					 * Make and display popup menu, has to work for both indexes.
+					 */
+					final boolean ind1 = arg0 == mNodePropValue1;
 
-	//have to show full set of possibilities for row and col, and cope if no node there 
-	for (String s : mItems)
-		mAdapter.add(s);
-
-	mAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-	mNodePropSpin1 = new Spinner(mCtx);
-	rcBar.addView(mNodePropSpin1);
-	LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
-			ViewGroup.LayoutParams.MATCH_PARENT);
-	mNodePropSpin1.setLayoutParams(params);
-	mNodePropSpin1.setAdapter(mAdapter);
-	if (mNodePropSpin1.getChildCount() > 0) {
-		View v = mNodePropSpin1.getChildAt(0);
-		//v.setBackgroundResource(COLOUR_SCORED);
-	}
-
-	mNodePropSpin1.setOnItemSelectedListener(new OnItemSelectedListener() {
-		private boolean mMuteSelectionChangeHandler = true; // prevent unwanted initial selection change callback, maybe copied code..
-
-		@Override
-		public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
-			// hackette to avoid callbacks on programmatic selection changes - NB conceivable might not work
-			// occasionally, if user is real quick so that a real sel change precedes and is processed prior to
-			// programmed one.
-			if (!mMuteSelectionChangeHandler)
-				;
-				//mSelChangeHandler.selectionChanged(mItems.get(position));
-			else
-				mMuteSelectionChangeHandler = false;
-		}
-
-		@Override
-		public void onNothingSelected(AdapterView<?> parentView) {
-		}
-	});
-}
-
-			
+					PopupMenu mPop = new PopupMenu(mCtx, ind1 ? mNodePropValue1 : mNodePropValue2);
+					Menu m = mPop.getMenu();
+					NodeProperty np2 = mTrial.getFixedNodeProperty(ind1 ? Trial.FIELD_ROW : Trial.FIELD_COL);
+					// Perhaps only get valid distinct values here, given context, also generalize for row and col.
+					// need to look at local node special case.
+					final ArrayList<Integer> mItems = (ArrayList<Integer>) np2.getDistinctValues();
+					for (Integer i : mItems) {
+						MenuItem item = m.add(Menu.NONE, i, Menu.NONE, i.toString());
+					}
+					mPop.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+						@Override
+						public boolean onMenuItemClick(MenuItem item) {
+							int val = item.getItemId();
+							Node nd = mTrial.getCurrNode();
+							Node nn = ind1 ?
+									mTrial.getNodeByRowCol(val, nd.getCol()) :
+									mTrial.getNodeByRowCol(nd.getRow(), val);
+							if (nn == null)
+								Util.msg("No matching node");
+							else
+								mTrial.gotoNodebyId(nn.getId());
+							refreshNodeScreen();
+							return false;
+						}
+					});
+					mPop.show();
+				}
+			};
+			mNodePropValue1.setOnClickListener(dry);
+			mNodePropValue2.setOnClickListener(dry);
 		}
 
 		// If node creation enabled, add button to create node:
@@ -1162,20 +1150,25 @@ if (true) {
 						}
 						Node n = (Node)res.obj();
 						mTrial.gotoNodebyId(n.getId());
-						refreshNodeScreen();
+						if (emptyTrial)
+							setupScreen();
+						else
+							refreshNodeScreen();
 				}
 			});
 			Util.setColoursBlackOnWhite(addNodeButton);
 		}		
 		
 		// Notes button:
-		Button notesButton = rcBar.addButton("Notes", new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				startActivityForResult(new Intent(ActTrial.this, ActTUNotes.class), ARC_NOTES_ACTIVITY);
-			}
-		});
-		Util.setColoursBlackOnWhite(notesButton);
+		if (!emptyTrial) {
+			Button notesButton = rcBar.addButton("Notes", new View.OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					startActivityForResult(new Intent(ActTrial.this, ActTUNotes.class), ARC_NOTES_ACTIVITY);
+				}
+			});
+			Util.setColoursBlackOnWhite(notesButton);
+		}
 		
 		// Handle reps:
 //		mRepsPresent = mTrial.AttributePresent(Trial.REP_ATTRIBUTE_NAME);
@@ -1201,9 +1194,11 @@ if (true) {
 		mTopLL.addView(rcBar);
 	
 		// Node Property display widgets: --------------------------------------------------------------
-		for (PropertyWidget aw : mPropertyWidgets) {
-			mTopLL.addView(new Hline(this));
-			mTopLL.addView(aw);
+		if (!emptyTrial) {
+			for (PropertyWidget aw : mPropertyWidgets) {
+				mTopLL.addView(new Hline(this));
+				mTopLL.addView(aw);
+			}
 		}
 		
 		mTopLL.addView(new Hline(this, R.color.red));  // Mark end of navigation/info area with red line
@@ -1282,7 +1277,7 @@ if (true) {
 					}
 				});
 		mTraitSelector.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, Util
-				.dp2px(g.ScreenItemSize(g.SIZE_BIG))));
+				.dp2px(g.ScreenItemSize(Globals.SIZE_BIG))));
 		Util.setBackgroundBlack(mTraitSelector);
 		scoreVL.addView(mTraitSelector);
 		scoreVL.addView(new Hline(this));
@@ -1327,7 +1322,8 @@ if (true) {
 		};
 		mViewPager.setAdapter(pa);
 		mTopLL.addView(mViewPager);
-		
+		mViewPager.setCurrentItem(1);
+
 		refreshNodeScreen();
 		return mTopLL;
 	}
@@ -1421,6 +1417,10 @@ if (true) {
 			closeTrial();
 			break;
 		case R.id.selectTraits:
+			if (mTrial.getNumNodes() <= 0) {
+				Util.msg("You cannot select score traits when there are no nodes");
+				break;
+			}
 			DlgChooseScoreSets.newInstance(new DlgChooseScoreSets.handler() {
 				@Override
 				public void onListSelect(ArrayList<RepSet> scoreSets) {
@@ -1535,7 +1535,7 @@ if (true) {
 	 * setFilter()
 	 * Basically a call back for DlgFilter to handle the user selections.
 	 */
-	public void setFilter(NodeAttribute att, String attval) {
+	public void setFilter(NodeProperty att, String attval) {
 		if (mTrial == null) return;
 		mTrial.setFilter(att, attval);
 		refreshNodeScreen();
@@ -1649,42 +1649,7 @@ if (true) {
 			break;
 		}
 	}
-	
-		
-	/*
-	 * handleNavigationValue()
-	 * Value received from bluetooth device, intended for navigating to a plot.
-	 */
-	@Override
-	public void handleNavigationValue(String barcode) {
-		if (TrialOpen()) {
-			/*
-			 *  See if any of the scoring traits have a barcode attribute.
-			 *  If so, look up the barcode. First match found is used.
-			 */
-			for (RepSet rs : mScoreSets) {
-				Trait trt = rs.getTrait();
-				NodeAttribute bcAtt = mTrial.getAttribute(trt.getBarcodeAttributeId());
-				if (bcAtt != null) {
-					// look up barcode in this attribute:
-					// MFK note no checks for ambiguous barcodes.
-					ArrayList<Long> nids = mTrial.getMatchingNodes(bcAtt, barcode);
-					if (nids.size() == 1) {
-						mTrial.gotoNodebyId(nids.get(0));
-						refreshNodeScreen();
-						gotoTraitFirstUnscored(trt, true);
-						return;
-					}
-				}
-			}
-			
-			if (mTrial.gotoNode(barcode))
-				refreshNodeScreen();
-			else
-				Util.msg("No node found with barcode " + barcode);
-		}
-	}
-	
+
 	
 	/*
 	 * GotoTraitFirstUnscored()
@@ -1724,31 +1689,110 @@ if (true) {
 	}
 	
 
-	/*
-	 * HandleBluetoothDataValue()
-	 * Value received from bluetooth device, intended for scoring.
-	 * Note - if a trait has been associated with the device (devTrait not null),
-	 * then we search for an unscored score set of that trait within the
-	 * trait selector (i.e. the currently selected traits), if one is found (note
-	 * there could be multiple is the trait has multiple reps) then we set the
-	 * first one found to the specified value. Note the trait selector doesn't have
-	 * to currently be on an instance of the specified trait.
-	 * If devTrait is null, then we assume the score is intended for the current datum.
-	 */
-	@Override
-	public void HandleBluetoothDataValue(String val, Trait devTrait) {
-		if (TrialOpen()) {
-			if (mDatum != null) {
-				Trait trt = mDatum.GetTrait();
-				if (devTrait != null && trt != devTrait && !gotoTraitFirstUnscored(devTrait, false)) {
-				        Util.msg("No unscored instance of trait " + devTrait.getCaption() + " in current node");
-				        return;
+	public void handleBluetoothValue(String val, ActBluetooth.MyBluetoothDevice btDev) {
+		if (!TrialOpen()) return;
+		switch (btDev.getMode()) {
+			case NAVIGATION:
+			/***
+			 * User has specified this device is used for navigation, which means identifying
+			 * and moving to specific nodes, and possibly to the scoring screen for a specific
+			 * trait.
+			 *
+			 * If a barcode attribute has been selected then we search in that attribute for a
+			 * node with val for the value for that attribute, if found, navigate to that node.
+			 * If not found we show message and return.
+			 *
+			 * Otherwise we look to see if any of the traits currently being scored have a barcode
+			 * attribute configured. For each of these traits we see if the value matches the
+			 * configured attribute at any node. If so (for the first instance found), we navigate
+			 * to that node, and to the scoring screen for that trait.
+			 *
+			 * If that search fails, then we search for a match in the Node barcode field.
+			 */
+				NodeAttribute barcodeAttribute = btDev.getNavAttribute();
+				if (barcodeAttribute != null) {
+					// Note only navigate if unique node matches barcode, perhaps we should offer choice.
+					final ArrayList<Long> nids = mTrial.getMatchingNodes(barcodeAttribute, val);
+					if (nids.size() == 1) {
+						mTrial.gotoNodebyId(nids.get(0));
+						refreshNodeScreen();
+						return;
+					} else if (nids.size() == 0) {
+						Util.msg("No node found with barcode " + val);
+					} else {
+						String[] nodelist = new String[nids.size()];
+						for (int i = 0; i < nids.size(); ++i) {
+							Node node = mTrial.getNodeById(nids.get(i));
+							nodelist[i] = String.format("%s %d %s %d", mTrial.getIndexName(0), node.getRow(),
+									mTrial.getIndexName(1), node.getCol());
+						}
+						DlgList.newInstanceSingle(0, String.format("%d Matching nodes", nodelist.length),
+								nodelist, new DlgList.ListSelectHandler() {
+									@Override
+									public void onListSelect(int context, int which) {
+										Util.msg("which " + which + " nidswhich " + nids.get(which));
+										mTrial.gotoNodebyId(nids.get(which));
+										refreshNodeScreen();
+									}
+								});
+					}
+					return;
 				}
-				if (!mDatum.processTextValue(val)) {
-					Util.msg("Could not set score");
+
+				/*
+				 *  See if any of the scoring traits have a barcode attribute.
+				 *  If so, look up the barcode. NB - First match found is used.
+				 */
+				for (RepSet rs : mScoreSets) {
+					Trait trt = rs.getTrait();
+					NodeAttribute bcAtt = mTrial.getAttribute(trt.getBarcodeAttributeId());
+					if (bcAtt != null) {
+						// look up barcode in this attribute:
+						// MFK note no checks for ambiguous barcodes.
+						ArrayList<Long> nids = mTrial.getMatchingNodes(bcAtt, val);
+						if (nids.size() == 1) {
+							mTrial.gotoNodebyId(nids.get(0));
+							refreshNodeScreen();
+							gotoTraitFirstUnscored(trt, true);
+							return;
+						}
+					}
 				}
-			} else
-				Util.msg("Not currently entering a score");
+
+				/*
+				 * Search using the barcode field in Node:
+				 */
+				if (mTrial.gotoNodeByBarcode(val))
+					refreshNodeScreen();
+				else
+					Util.msg("No node found with barcode " + val);
+				break;
+
+			case SCORING:
+			/*
+			 * Value is a score.
+			 * If no specific trait is configure for btDev then the value is
+			 * used for the current node/scoring ti (if there is one).
+			 * If there is a specific trait, then if it matches the currently scoring
+			 * TI, the score is used for that. If it doesn't match the currently scoring
+			 * TI, then we go to the first unscored ti of that trait in the current
+			 * scoring set (if there is one), and use the score for that.
+			 */
+				if (mDatum != null) {
+					Trait trt = mDatum.GetTrait();
+					Trait devTrait = btDev.getTrait();
+					if (devTrait != null && trt != devTrait && !gotoTraitFirstUnscored(devTrait, false)) {
+						Util.msg("No unscored instance of trait " + devTrait.getCaption() + " in current node");
+						return;
+					}
+					if (!mDatum.processTextValue(val)) {
+						Util.msg("Could not set score");
+					}
+				} else
+					Util.msg("Not currently entering a score");
+				break;
+			case NONE:
+				break;
 		}
 	}
 

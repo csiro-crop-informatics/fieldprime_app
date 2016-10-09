@@ -337,13 +337,14 @@ public class ActMain extends Globals.Activity {
 		    alert.setMessage("Choose a file name for the database backup");
 		    alert.setTitle("Database Backup");
 		    EditText input = new EditText(this);
-		    input.setId(88);        
+			final int fudge = View.generateViewId();
+		    input.setId(fudge);
 		    alert.setView(input);
 		    alert.setPositiveButton("OK", new DialogInterface.OnClickListener() {
 		        @Override
 		        public void onClick(DialogInterface dialog, int which) {
 		        	Dialog d = (Dialog)dialog;
-		            EditText input = (EditText) ((Dialog)dialog).findViewById(88);
+		            EditText input = (EditText) ((Dialog)dialog).findViewById(fudge);
 		            // need to check filename and create dirs if necessary:
 		            String fname = Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + input.getText().toString();
 		            File f = new File(fname);

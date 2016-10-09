@@ -22,6 +22,7 @@ import android.database.sqlite.SQLiteDatabase;
 
 import csiro.fieldprime.Trial.Node;
 import csiro.fieldprime.Trial.NodeAttribute;
+import csiro.fieldprime.Trial.NodeProperty;
 import csiro.fieldprime.Trial.SortDirection;
 import csiro.fieldprime.Trial.SortType;
 
@@ -38,11 +39,11 @@ public class Pstate {
 	private NodeAttribute [] msSortAttributes = {null, null};
 	private SortDirection [] msSortDirections = {null, null};
 	private boolean mReverse = false;
-	
+
 	// Filtering stuff:
 	private boolean mFiltering = false;
-	private NodeAttribute msFilterAttribute;
-	private String msFilterAttValue;
+	private NodeProperty msFilterProperty;
+	private String msFilterPropVal;
 			
 	// METHODS: -------------------------------------------------------------------------
 	static private SQLiteDatabase g_db() {
@@ -110,32 +111,32 @@ public class Pstate {
 	//*** Filtering stuff: ***************************************************************
 	
 	/*
-	 * setFilterAttribute()
-	 * NB caller should ensure msFilterAttribute is cleared.
+	 * setFilterProperty()
+	 * NB caller should ensure msFilterProperty is cleared.
 	 */
-	private void setFilterAttribute(NodeAttribute nat) {
-		msFilterAttribute = nat;
-		// MFK maybe here we should set msFilterAttValue to null
+	private void setFilterProperty(NodeProperty nat) {
+		msFilterProperty = nat;
+		// MFK maybe here we should set msFilterPropVal to null
 	}
 	
-	public NodeAttribute getFilterAttribute() { return msFilterAttribute; }
-	public String getFilterAttValue() { return msFilterAttValue; }
-	public void setFilterAttValue(String attval) { msFilterAttValue = attval; }
+	public NodeProperty getFilterProperty() { return msFilterProperty; }
+	public String getFilterPropVal() { return msFilterPropVal; }
+	public void setFilterPropVal(String propval) { msFilterPropVal = propval; }
 	
 	/*
 	 * setFilter()
 	 * Set both the attribute and chosen value.
 	 */
-	public void setFilter(NodeAttribute att, String attval) {
+	public void setFilter(NodeProperty att, String attval) {
 		if (att == null)
 			clearFilter();
 		mFiltering = true;
-		setFilterAttribute(att);
-		setFilterAttValue(attval);
+		setFilterProperty(att);
+		setFilterPropVal(attval);
 	}
 	public void clearFilter() {
-		msFilterAttribute = null;
-		msFilterAttValue = null;
+		msFilterProperty = null;
+		msFilterPropVal = null;
 		mFiltering = false;
 	}
 	public boolean isFiltering() {
@@ -167,16 +168,44 @@ public class Pstate {
 		}
 		
 		// Filtering state:
-		Tstore.TRIAL_SCORE_FILTER_ATTRIBUTE.setLongValue(g_db(), trialId, 
-				isFiltering() ? msFilterAttribute.getId() : null);
+		Tstore.TRIAL_SCORE_FILTER_ATTRIBUTE.setLongValue(g_db(), trialId,
+				isFiltering() ? msFilterProperty.id() : null);
 		Tstore.TRIAL_SCORE_FILTER_VALUE.setStringValue(g_db(), trialId,
-				isFiltering() ? getFilterAttValue() : null);
+				isFiltering() ? getFilterPropVal() : null);
+		Tstore.TRIAL_SCORE_FILTER_NODEPROPERTY_SOURCE.setIntValue(g_db(), trialId,
+				isFiltering() ? msFilterProperty.source().ordinal() : null);
 	}
 	
 	/*
 	 * restore()
 	 * Reset from db.
 	 */
+	private void restoreFilter(Trial trl) {
+		Long propId = Tstore.TRIAL_SCORE_FILTER_ATTRIBUTE.getLongValue(g_db(), trl.getId());
+		if (propId == null) {
+			clearFilter();
+			return;
+		}
+		Integer filtPropSource = Tstore.TRIAL_SCORE_FILTER_NODEPROPERTY_SOURCE.getIntValue(g_db(), trl.getId());
+		if (filtPropSource == null) {
+			clearFilter();
+			return;
+		}
+		Trial.NodePropertySource npSource = Trial.NodePropertySource.values()[filtPropSource];
+
+		NodeProperty filtProp = trl.getNodeProperty(npSource, propId);
+		if (filtProp == null) {
+			clearFilter();
+			return;
+		}
+		setFilterProperty(filtProp);
+		String fval = Tstore.TRIAL_SCORE_FILTER_VALUE.getStringValue(g_db(), trl.getId());
+		if (fval == null)
+			clearFilter();
+		else
+			setFilter(filtProp, fval);
+		mFiltering = true;
+	}
 	public boolean restore(Trial trl) {
 		// Sorting state:
 		Integer Val = Tstore.TRIAL_SCORE_STATE_SORT_MODE.getIntValue(g_db(), trl.getId());
@@ -198,21 +227,10 @@ public class Pstate {
 			dir = Tstore.TRIAL_SCORE_STATE_SORT_DIR2.getIntValue(g_db(), trl.getId());
 			msSortDirections[1] = dir == null ? null : SortDirection.fromValue(dir);
 		}
-		
+
 		// Filtering state:
-		Long fattId = Tstore.TRIAL_SCORE_FILTER_ATTRIBUTE.getLongValue(g_db(), trl.getId());
-		if (fattId == null)
-			clearFilter();
-		else {
-			NodeAttribute fatt = trl.getAttribute(fattId);
-			setFilterAttribute(fatt);
-			String fval = Tstore.TRIAL_SCORE_FILTER_VALUE.getStringValue(g_db(), trl.getId());
-			if (fval == null)
-				clearFilter();
-			else
-				setFilter(fatt, fval);
-			mFiltering = true;
-		}
+		restoreFilter(trl);
+
 		return true;
 	}
 
@@ -220,4 +238,4 @@ public class Pstate {
 		mReverse = reverse;	
 	}
 	public boolean getReverse() { return mReverse; }
-};
+}

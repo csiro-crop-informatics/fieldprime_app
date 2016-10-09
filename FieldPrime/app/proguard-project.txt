@@ -12,7 +12,7 @@
 
 # Add any project specific keep options here:
 
--libraryjars libs/ZSDK_ANDROID_API.jar
+#-libraryjars libs/ZSDK_ANDROID_API.jar
 -dontwarn com.zebra.sdk.**
 
 # will keep line numbers and file name obfuscation

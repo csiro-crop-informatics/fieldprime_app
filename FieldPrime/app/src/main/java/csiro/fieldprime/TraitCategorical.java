@@ -7,9 +7,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Locale;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.DefaultHttpClient;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;

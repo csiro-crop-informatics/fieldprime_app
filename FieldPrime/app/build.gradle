@@ -1,20 +1,35 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 21
-    buildToolsVersion "19.1.0"
-
+    signingConfigs {
+        config {
+            keyAlias 'FieldPrime'
+            keyPassword 'ne1CanGues'
+            storeFile file('/home/kir145/proj/fpapp/AndroidKeyStore.jks')
+            storePassword 'ne1CanGues'
+        }
+    }
+    compileSdkVersion 23
+    buildToolsVersion "23.0.2"
     defaultConfig {
         applicationId "csiro.fieldprime"
-        minSdkVersion 16
+        minSdkVersion 17
         targetSdkVersion 19
     }
-
     buildTypes {
         release {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-project.txt'
+            signingConfig signingConfigs.config
         }
+    }
+    productFlavors {
+    }
+    lintOptions {
+        checkReleaseBuilds false
+        // Or, if you prefer, you can continue to check for errors in release builds,
+        // but continue the build even when errors are found:
+        abortOnError false
     }
 }
 
