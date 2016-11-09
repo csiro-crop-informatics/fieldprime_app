@@ -70,6 +70,7 @@ public class ActBluetooth extends VerticalList.VLActivity {
 		MOTOROLA_CS300("(.*)\r"),
 		METTLER_TOLEDO_ML3002("(.*)\033enter."),
 		METTLER_TOLEDO_ML4001("\\s*(.*) g\\s*"),
+		DECIMAL_IN_STRING("\\D*(\\d+\\.\\d+)\\D*"),
 		ALLFLEX(".. (.*)\r\n"),
 		ZEBRA_PRINTER(null)
 		;
@@ -499,8 +500,9 @@ public class ActBluetooth extends VerticalList.VLActivity {
 								if (matcher.matches()) {
 									data = matcher.group(1);
 								} else {
+									data = "fpmsg: " + "Does not match pattern";
 									//curLen = 0;
-									continue;
+									//continue;
 								}
 							}
 						}
@@ -543,7 +545,9 @@ public class ActBluetooth extends VerticalList.VLActivity {
 				updateButtonsAndDetails();
     			Util.toast("Connection Established");
     			fillScreen();   // We need to change the text of just connected device
-    		} else {
+    		} else if (values[0].startsWith("fpmsg:")) {
+				Util.toast(values[0].substring(6));
+			} else {
 				String val = values[0];
 				if (val.length() > 0) {
 					handlers h = getHandler();
@@ -551,7 +555,7 @@ public class ActBluetooth extends VerticalList.VLActivity {
 						h.handleBluetoothValue(val, mDevice);
 					}
 				}
-    		}
+			}
     		super.onProgressUpdate(values);
     	}
     	
@@ -754,6 +758,7 @@ public class ActBluetooth extends VerticalList.VLActivity {
 								case ALLFLEX:  // eg "LA 982 123545\r\n"
 								case METTLER_TOLEDO_ML3002: // {27,101,110,116,101,114,46};   // bytes at end of Mettler Toledo scale send
 								case METTLER_TOLEDO_ML4001:
+								case DECIMAL_IN_STRING:
 									mDevice.mPattern = dt.getPattern();
 									break;
 								case ZEBRA_PRINTER:
